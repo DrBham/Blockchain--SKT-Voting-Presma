@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Bilik Suara - TPS</title>
+<style>
+  body { font-family: Segoe UI, Arial, sans-serif; background: #EDF1F4; color: #16232E; margin: 0; }
+  main { max-width: 560px; margin: 28px auto; background: #fff; padding: 28px 32px;
+         border-radius: 12px; border: 1px solid #D3DBE1; }
+  h1 { margin: 0 0 4px; font-size: 26px; }
+  .redup { color: #6B7C8A; margin: 0 0 18px; }
+  label { display: block; margin: 14px 0 6px; font-weight: bold; }
+  input[type=text] { width: 100%; padding: 10px; font-size: 16px; box-sizing: border-box;
+                     border: 1px solid #D3DBE1; border-radius: 8px; }
+  .pilihan { display: block; padding: 10px 12px; margin: 6px 0; border: 1px solid #D3DBE1;
+             border-radius: 8px; font-weight: normal; cursor: pointer; }
+  button { margin-top: 16px; padding: 11px 18px; border: 0; border-radius: 8px; color: #fff;
+           background: #1C7293; font-size: 16px; cursor: pointer; }
+  #hasil { margin-top: 16px; padding: 12px 14px; border-radius: 8px; display: none; }
+  .baik { background: #ECF4F8; color: #1C7293; }
+  .buruk { background: #FCF2EC; color: #B5392B; }
+  footer { margin-top: 20px; font-size: 14px; color: #6B7C8A; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Bilik Suara</h1>
+  <p class="redup">TPS <b id="tps">-</b> (edge-api di Laptop A). Pemungutan: <b id="pemungutan">-</b></p>
+  <label for="pemilih">Nomor pemilih</label>
+  <input type="text" id="pemilih" placeholder="contoh: TI001">
+  <label>Pilihan</label>
+  <div id="kandidat"></div>
+  <button onclick="pilih()">Masukkan suara</button>
+  <div id="hasil"></div>
+  <footer>Masuk <b id="masuk">0</b> | diterima <b id="diterima">0</b> | ditolak <b id="ditolak">0</b>
+          | menunggu disetor <b id="antre">-</b> | sudah disetor <b id="terkirim">-</b></footer>
+</main>
+<script>
+async function muatDaftar() {
+  const d = await (await fetch('/daftar')).json();
+  document.getElementById('tps').textContent = d.tps_id;
+  document.getElementById('kandidat').innerHTML = Object.entries(d.kandidat).map(k =>
+    '<label class="pilihan"><input type="radio" name="pilihan" value="' + k[0] + '"> ' +
+    k[0] + '. ' + k[1] + '</label>').join('');
+}
+async function muatStatus() {
+  const s = await (await fetch('/status')).json();
+  for (const k of ['pemungutan', 'masuk', 'diterima', 'ditolak', 'antre', 'terkirim'])
+    if (k in s) document.getElementById(k).textContent = s[k];
+}
+async function pilih() {
+  const pemilih = document.getElementById('pemilih').value.trim().toUpperCase();
+  const pilihan = document.querySelector('input[name=pilihan]:checked');
+  const hasil = document.getElementById('hasil');
+  hasil.style.display = 'block';
+  if (!pemilih || !pilihan) {
+    hasil.className = 'buruk';
+    hasil.textContent = 'Isi nomor pemilih dan pilih satu kandidat.';
+    return;
+  }
+  const r = await (await fetch('/suara', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({pemilih_id: pemilih, pilihan: Number(pilihan.value)})
+  })).json();
+  hasil.className = r.diterima ? 'baik' : 'buruk';
+  hasil.textContent = r.diterima
+    ? 'Suara ' + pemilih + ' diterima. Nomor urut di TPS: ' + r.seq + '.'
+    : 'Suara ' + pemilih + ' ditolak: ' + r.alasan + '.';
+  muatStatus();
+}
+muatDaftar();
+muatStatus();
+setInterval(muatStatus, 3000);
+</script>
+</body>
+</html>

@@ -1,0 +1,23 @@
+KODE AWAL PRAKTIKUM 5 - SISTEM KOMPUTASI TERDISTRIBUSI
+Fitur dan pengujian sistem voting
+
+Kode ini adalah keadaan akhir Praktikum 4 yang sudah benar, ditambah:
+- komentar "# LENGKAPI" di tempat tiga fitur harus Anda tulis sendiri,
+- laptop-a/edge-api/tps_gadungan.py  (untuk menguji Fitur 2),
+- laptop-a/edge-api/ukur_voting.py   (alat ukur untuk Sesi 2).
+
+Langkah awal, di kedua laptop:
+1. Hentikan sistem voting Praktikum 4 (docker compose down).
+2. Ubah nama folder skt-voting lama menjadi skt-voting-p4.
+3. Ekstrak folder skt-voting ini ke repositori kelompok.
+4. Ganti nilai TPS_TOKEN di laptop-a/.env (Laptop A) dan laptop-b/.env
+   (Laptop B) dengan satu kata rahasia kelompok. Nilainya harus sama.
+5. Ikuti Modul Praktikum 5 mulai dari bagian C.1.
+
+Tempat "# LENGKAPI":
+  Fitur 1  laptop-a/edge-api/app.py          fungsi periksa
+  Fitur 2  laptop-b/cloud-api/app.py         fungsi terima_suara
+           laptop-a/edge-api/kirim.py        fungsi kirim_rest
+  Fitur 3  laptop-a/edge-api/daftar.py
+           laptop-a/voter-sim/voter.py       fungsi pilihan_acak
+           laptop-b/cloud-api/penyimpanan.py fungsi catatan

@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Papan Hasil - Pusat Rekap</title>
+<style>
+  body { font-family: Segoe UI, Arial, sans-serif; background: #EDF1F4; color: #16232E; margin: 0; }
+  main { max-width: 760px; margin: 28px auto; background: #fff; padding: 28px 32px;
+         border-radius: 12px; border: 1px solid #D3DBE1; }
+  h1 { margin: 0 0 4px; font-size: 26px; }
+  .redup { color: #6B7C8A; margin: 0 0 18px; }
+  .kotak { display: flex; gap: 12px; margin: 16px 0; }
+  .kotak div { flex: 1; background: #EDF1F4; border-radius: 10px; padding: 12px 14px; }
+  .kotak b { display: block; font-size: 26px; }
+  .buruk b { color: #B5392B; }
+  #catatan { background: #ECF4F8; color: #1C7293; padding: 10px 14px; border-radius: 8px; }
+  .baris { display: flex; align-items: center; gap: 10px; margin: 8px 0; }
+  .baris span { width: 110px; }
+  .batang { background: #1C7293; height: 26px; border-radius: 6px; min-width: 2px; }
+  button { padding: 8px 14px; border: 0; border-radius: 8px; color: #fff; cursor: pointer;
+           font-size: 15px; background: #1C7293; }
+  button.tutup { background: #D97D28; }
+  #status { font-weight: bold; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Papan Hasil</h1>
+  <p class="redup">Pusat rekap (cloud-api di Laptop B). Diperbarui setiap 2 detik.</p>
+  <p>Pemungutan: <span id="status">-</span>
+     <button onclick="ubah('buka')">Buka</button>
+     <button class="tutup" onclick="ubah('tutup')">Tutup</button></p>
+  <div class="kotak">
+    <div><b id="total">0</b>total suara</div>
+    <div id="kotak-kiriman"><b id="kiriman">0</b>kiriman ganda</div>
+    <div id="kotak-pemilih"><b id="pemilih">0</b>pemilih ganda</div>
+  </div>
+  <p id="catatan"></p>
+  <h3>Per kandidat</h3>
+  <div id="kandidat"></div>
+  <h3>Per TPS</h3>
+  <div id="tps"></div>
+</main>
+<script>
+function batang(nama, n, maks) {
+  return '<div class="baris"><span>' + nama + '</span><div class="batang" style="width:' +
+         Math.round(400 * n / Math.max(maks, 1)) + 'px"></div><b>' + n + '</b></div>';
+}
+async function muat() {
+  const r = await (await fetch('/rekap')).json();
+  document.getElementById('status').textContent = r.pemungutan;
+  document.getElementById('total').textContent = r.total_suara;
+  document.getElementById('kiriman').textContent = r.kiriman_ganda;
+  document.getElementById('pemilih').textContent = r.pemilih_ganda;
+  document.getElementById('catatan').textContent = r.catatan || '';
+  document.getElementById('kotak-kiriman').className = r.kiriman_ganda ? 'buruk' : '';
+  document.getElementById('kotak-pemilih').className = r.pemilih_ganda ? 'buruk' : '';
+  const k = Object.entries(r.per_kandidat), t = Object.entries(r.per_tps);
+  const maks = Math.max(1, ...k.map(x => x[1]));
+  document.getElementById('kandidat').innerHTML =
+    k.map(x => batang('Kandidat ' + x[0], x[1], maks)).join('') || '<p class="redup">Belum ada suara.</p>';
+  document.getElementById('tps').innerHTML =
+    t.map(x => batang(x[0], x[1], r.total_suara)).join('') || '<p class="redup">Belum ada suara.</p>';
+}
+async function ubah(nilai) {
+  await fetch('/pemungutan/' + nilai, {method: 'POST'});
+  muat();
+}
+muat();
+setInterval(muat, 2000);
+</script>
+</body>
+</html>

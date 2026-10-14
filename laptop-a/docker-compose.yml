@@ -1,0 +1,30 @@
+name: voting-a
+
+services:
+  edge-api:
+    build: ./edge-api
+    ports:
+      - "8080:8000"
+    env_file: .env
+    environment:
+      SERVICE: edge-api
+    volumes:
+      - log-a:/log
+      - data-tps:/data
+    restart: unless-stopped
+
+  voter-sim:
+    build: ./voter-sim
+    environment:
+      EDGE_URL: http://edge-api:8000
+      INTERVAL_S: "2"
+      SERVICE: voter-sim
+    volumes:
+      - log-a:/log
+    depends_on:
+      - edge-api
+    restart: unless-stopped
+
+volumes:
+  log-a:
+  data-tps:
