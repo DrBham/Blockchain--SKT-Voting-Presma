@@ -22,6 +22,7 @@ def _putaran():
                 "pemilih_id": s["pemilih_id"],
                 "pilihan": s["pilihan"],
                 "waktu": s["waktu"],
+                "bukti": s["bukti"],  # dicocokkan ulang oleh pusat rekap
             }
             if not kirim_rest(pesan)["terkirim"]:
                 break  # pusat rekap belum terjangkau, coba lagi pada putaran berikutnya

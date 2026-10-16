@@ -4,6 +4,8 @@ import threading
 import time
 import uuid
 
+import bukti
+
 DB_PATH = os.getenv("TPS_DB", "/data/tps.db")
 
 _kunci = threading.Lock()
@@ -16,7 +18,8 @@ _db.execute("""
         pemilih_id TEXT UNIQUE,  -- satu pemilih hanya boleh punya satu baris
         pilihan    INTEGER,
         waktu      INTEGER,
-        status     TEXT          -- 'antre' atau 'terkirim'
+        status     TEXT,         -- 'antre' atau 'terkirim'
+        bukti      TEXT          -- kode bukti suara untuk pemilih
     )""")
 _db.execute("""
     CREATE TABLE IF NOT EXISTS tolak (
@@ -33,18 +36,33 @@ def sudah_memilih(pemilih_id):
                            (pemilih_id,)).fetchone() is not None
 
 
-def simpan_lokal(pemilih_id, pilihan):
-    # suara disimpan di TPS lebih dulu, dengan status 'antre'
+def simpan_lokal(pemilih_id, pilihan, tps_id):
+    # suara disimpan di TPS lebih dulu, dengan status 'antre'.
+    # Mengembalikan (seq, kode bukti), atau None bila pemilih sudah memilih.
+    pesan = {"request_id": str(uuid.uuid4()), "tps_id": tps_id, "pemilih_id": pemilih_id,
+             "pilihan": pilihan, "waktu": int(time.time() * 1000)}
     with _kunci:
         try:
             cur = _db.execute(
                 "INSERT INTO suara (request_id, pemilih_id, pilihan, waktu, status)"
                 " VALUES (?, ?, ?, ?, 'antre')",
-                (str(uuid.uuid4()), pemilih_id, pilihan, int(time.time() * 1000)))
-            _db.commit()
-            return cur.lastrowid  # nomor urut suara di TPS ini
+                (pesan["request_id"], pemilih_id, pilihan, pesan["waktu"]))
         except sqlite3.IntegrityError:
             return None  # pemilih_id sudah ada: pemilih ini sudah memilih
+        seq = cur.lastrowid  # nomor urut suara di TPS ini
+        kode = bukti.hitung({**pesan, "seq": seq})
+        _db.execute("UPDATE suara SET bukti = ? WHERE seq = ?", (kode, seq))
+        _db.commit()
+        return seq, kode
+
+
+def status_bukti(kode):
+    kode = bukti.rapikan(kode)
+    with _kunci:
+        baris = _db.execute("SELECT status FROM suara WHERE bukti = ?", (kode,)).fetchone()
+    if baris is None:
+        return "tidak ditemukan"
+    return "antre di TPS" if baris["status"] == "antre" else "terkirim"
 
 
 def catat_tolak(pemilih_id, alasan):

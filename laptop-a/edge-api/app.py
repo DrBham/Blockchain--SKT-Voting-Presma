@@ -84,18 +84,26 @@ def terima_suara(s: SuaraMasuk):
     # periksa, simpan di TPS, lalu langsung jawab pemilih.
     # Penyetoran ke pusat rekap diurus setor.py, tidak ditunggu di sini.
     alasan = periksa(s)
-    seq = None
+    seq = kode = None
     if alasan is None:
-        seq = db.simpan_lokal(s.pemilih_id, s.pilihan)
-        if seq is None:
+        hasil = db.simpan_lokal(s.pemilih_id, s.pilihan, TPS_ID)
+        if hasil is None:
             alasan = "pemilih sudah memilih"
+        else:
+            seq, kode = hasil
     if alasan is None:
         clock.lokal("simpan", seq=seq)
     else:
         db.catat_tolak(s.pemilih_id, alasan)
         clock.lokal("tolak", alasan=alasan)
 
-    balasan = {"diterima": alasan is None, "alasan": alasan, "seq": seq}
+    balasan = {"diterima": alasan is None, "alasan": alasan, "seq": seq, "bukti": kode}
     if s.asal == "voter-sim":
         balasan["lamport"] = clock.kirim("balas", ke="voter-sim", seq=seq)
     return balasan
+
+
+@app.get("/bukti/{kode}")
+def cek_bukti(kode: str):
+    # status lokal kode bukti di TPS: antre di TPS / terkirim / tidak ditemukan
+    return {"bukti": kode, "status": db.status_bukti(kode)}
