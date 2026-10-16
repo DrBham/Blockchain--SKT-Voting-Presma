@@ -11,6 +11,7 @@ import lamport as clock
 import pengumuman
 import tps_db as db
 from daftar import KANDIDAT, PEMILIH
+from nim import periksa_nim
 from setor import mulai_setor
 
 TPS_ID = os.getenv("TPS_ID", "tps-1")
@@ -61,6 +62,9 @@ def periksa(s):
     # LENGKAPI: bila pemungutan bukan "buka", kembalikan "pemungutan belum dibuka"
     if pemungutan != "buka":
         return "pemungutan belum dibuka"
+    alasan_nim = periksa_nim(s.pemilih_id)
+    if alasan_nim:
+        return alasan_nim
     if s.pemilih_id not in PEMILIH:
         return "pemilih tidak terdaftar"
     if s.pilihan not in KANDIDAT:

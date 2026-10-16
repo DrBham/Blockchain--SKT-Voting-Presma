@@ -11,21 +11,22 @@ INTERVAL_S = float(os.getenv("INTERVAL_S", "2"))
 
 
 def pemilih_acak():
-    # sesekali datang orang yang tidak ada di daftar pemilih
+    # sesekali datang orang dengan format NIM salah atau yang tidak ada di DPT
     if random.random() < 0.05:
         return f"XX{random.randint(1, 99):03d}"
-    # pemilih diambil acak, jadi orang yang sama bisa datang dua kali
-    return f"TI{random.randint(1, 200):03d}"
+    if random.random() < 0.05:
+        return f"F55125{random.randint(11, 99):03d}"
+    # pemilih diambil acak dari DPT, jadi orang yang sama bisa datang dua kali
+    fak, prodi = random.choice((("A", "121"), ("C", "301"), ("F", "551")))
+    th = random.choice(("19", "22", "23", "24", "25"))
+    return f"{fak}{prodi}{th}{random.randint(1, 10):03d}"
 
 
 def pilihan_acak():
-    # sesekali ada yang memilih kandidat yang tidak ada
+    # sesekali ada yang memilih paslon yang tidak ada
     if random.random() < 0.03:
         return 9
-    # [FITUR 3] LENGKAPI: tambahkan kandidat baru, lengkap dengan bobotnya
-    # bobot 5 untuk kandidat 1, bobot 3 untuk kandidat 2, bobot 2 untuk kandidat 3, bobot 1 untuk kandidat 4
-    return random.choices([1, 2, 3, 4], weights=[5, 3, 2, 1])[0]    
-
+    return random.choice([1, 2])
 
 while True:
     pemilih, pilihan = pemilih_acak(), pilihan_acak()

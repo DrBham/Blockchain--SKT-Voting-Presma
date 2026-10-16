@@ -11,8 +11,7 @@ IDEMPOTEN = os.getenv("IDEMPOTEN", "1") == "1"
 LAMBAT_PERSEN = int(os.getenv("LAMBAT_PERSEN", "0"))
 LAMBAT_MS = int(os.getenv("LAMBAT_MS", "1500"))
 
-# FITUR 3: Paket C, Kelompok 6
-# Daftar pemilih TI026 sampai TI175
+# Jumlah pemilih di DPT Presma (lihat laptop-a/edge-api/daftar.py)
 JUMLAH_PEMILIH = 150
 
 _kunci = threading.Lock()
