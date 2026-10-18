@@ -1,0 +1,61 @@
+import json
+import sys
+
+from conftest import CLOUD
+
+sys.path.insert(0, str(CLOUD))
+from rantai import Rantai  # noqa: E402
+
+TX = {"request_id": "r1", "tps_id": "tps-ft", "seq": 1, "pemilih_id": "F55125001",
+      "pilihan": 1, "waktu": 1, "bukti": "a" * 16}
+
+
+def test_tambang_dan_cari(tmp_path):
+    r = Rantai(str(tmp_path / "c.json"), 2)
+    assert r.tambah_pool(TX) and not r.tambah_pool(TX)
+    assert r.di_pool(TX["bukti"])
+    b = r.tambang()
+    assert b["index"] == 1 and b["hash"].startswith("00") and r.cari(TX["bukti"]) == 1
+    assert not r.di_pool(TX["bukti"])
+    assert not r.tambah_pool(TX) and r.tambang() is None
+    assert r.ringkas()["panjang"] == 2 and r.ringkas()["pool"] == 0
+
+
+def test_persisten(tmp_path):
+    p = str(tmp_path / "c.json")
+    r = Rantai(p, 2)
+    r.tambah_pool(TX)
+    r.tambang()
+    r2 = Rantai(p, 2)
+    assert r2.cari(TX["bukti"]) == 1 and r2.validasi() == (True, None, "rantai valid")
+
+
+def test_validasi_deteksi_ubah(tmp_path):
+    p = tmp_path / "c.json"
+    r = Rantai(str(p), 2)
+    for i in (1, 2):
+        r.tambah_pool({**TX, "request_id": f"r{i}", "bukti": str(i) * 16})
+        r.tambang()
+    data = json.loads(p.read_text())
+    data[1]["transaksi"][0]["pilihan"] = 2  # ubah suara di block lama
+    p.write_text(json.dumps(data))
+    ok, rusak, alasan = Rantai(str(p), 2).validasi()
+    assert (ok, rusak) == (False, 1) and "hash" in alasan
+
+
+def test_file_rusak_mulai_dari_genesis(tmp_path):
+    p = tmp_path / "c.json"
+    p.write_text("{bukan json")
+    r = Rantai(str(p), 2)
+    assert r.ringkas()["panjang"] == 1 and r.validasi()[0]
+
+
+def test_block_tanpa_field_tidak_crash(tmp_path):
+    p = tmp_path / "c.json"
+    r = Rantai(str(p), 2)
+    r.tambah_pool(TX)
+    r.tambang()
+    data = json.loads(p.read_text())
+    del data[1]["transaksi"]
+    p.write_text(json.dumps(data))
+    assert Rantai(str(p), 2).validasi()[:2] == (False, 1)
