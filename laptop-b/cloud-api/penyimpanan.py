@@ -31,7 +31,9 @@ _db.execute("""
         seq        INTEGER,
         pemilih_id TEXT,
         pilihan    INTEGER,
-        waktu      INTEGER
+        waktu      INTEGER,
+        bukti      TEXT,     -- kode bukti suara (aturan unik)
+        block      INTEGER   -- nomor block di rantai, NULL bila belum ditambang
     )
 """)
 
@@ -66,9 +68,10 @@ def simpan(s):
                     seq,
                     pemilih_id,
                     pilihan,
-                    waktu
+                    waktu,
+                    bukti
                 )
-                VALUES (?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     s["request_id"],
@@ -76,7 +79,8 @@ def simpan(s):
                     s["seq"],
                     s["pemilih_id"],
                     s["pilihan"],
-                    s["waktu"]
+                    s["waktu"],
+                    s["bukti"]
                 )
             )
 
@@ -202,3 +206,17 @@ def ubah_status(nilai):
         )
 
         _db.commit()
+
+
+def tandai_block(daftar_bukti, index):
+    with _kunci:
+        _db.executemany("UPDATE suara SET block = ? WHERE bukti = ?",
+                        [(index, kode) for kode in daftar_bukti])
+        _db.commit()
+
+
+def belum_ditambang():
+    # suara yang sudah diterima tetapi belum tercatat di block (mis. cloud-api di-restart)
+    with _kunci:
+        baris = _db.execute("SELECT * FROM suara WHERE block IS NULL ORDER BY id").fetchall()
+    return [dict(b) for b in baris]
