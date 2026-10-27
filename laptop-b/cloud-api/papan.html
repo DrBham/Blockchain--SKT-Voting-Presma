@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="utf-8">
-<title>Papan Hasil - Pusat Rekap</title>
+<title>Papan Hasil - Pemilihan Presma UNTAD</title>
 <style>
   body { font-family: Segoe UI, Arial, sans-serif; background: #EDF1F4; color: #16232E; margin: 0; }
   main { max-width: 760px; margin: 28px auto; background: #fff; padding: 28px 32px;
@@ -21,6 +21,9 @@
            font-size: 15px; background: #1C7293; }
   button.tutup { background: #D97D28; }
   #status { font-weight: bold; }
+  input[type=text] { padding: 8px; font-size: 15px; border: 1px solid #D3DBE1; border-radius: 8px; width: 220px; }
+  #hasil-bukti { font-weight: bold; margin-left: 8px; }
+  .rantai-baik { color: #1C7293; } .rantai-buruk { color: #B5392B; }
 </style>
 </head>
 <body>
@@ -36,10 +39,15 @@
     <div id="kotak-pemilih"><b id="pemilih">0</b>pemilih ganda</div>
   </div>
   <p id="catatan"></p>
-  <h3>Per kandidat</h3>
+  <h3>Per paslon</h3>
   <div id="kandidat"></div>
   <h3>Per TPS</h3>
   <div id="tps"></div>
+  <h3>Cek bukti suara</h3>
+  <p><input type="text" id="kode-bukti" placeholder="16 karakter kode bukti">
+     <button onclick="cekBukti()">Cek</button><span id="hasil-bukti"></span></p>
+  <h3>Rantai block</h3>
+  <p id="rantai">-</p>
 </main>
 <script>
 function batang(nama, n, maks) {
@@ -58,16 +66,31 @@ async function muat() {
   const k = Object.entries(r.per_kandidat), t = Object.entries(r.per_tps);
   const maks = Math.max(1, ...k.map(x => x[1]));
   document.getElementById('kandidat').innerHTML =
-    k.map(x => batang('Kandidat ' + x[0], x[1], maks)).join('') || '<p class="redup">Belum ada suara.</p>';
+    k.map(x => batang('Paslon ' + x[0], x[1], maks)).join('') || '<p class="redup">Belum ada suara.</p>';
   document.getElementById('tps').innerHTML =
     t.map(x => batang(x[0], x[1], r.total_suara)).join('') || '<p class="redup">Belum ada suara.</p>';
+}
+async function muatRantai() {
+  const r = await (await fetch('/rantai')).json();
+  const v = await (await fetch('/rantai/validasi')).json();
+  const el = document.getElementById('rantai');
+  el.className = v.valid ? 'rantai-baik' : 'rantai-buruk';
+  el.textContent = r.panjang + ' block | ' + r.pool + ' suara menunggu ditambang | hash terakhir ' +
+    r.terakhir + ' | ' + (v.valid ? 'rantai VALID' :
+    'rantai TIDAK VALID, block pertama rusak: ' + v.index_rusak + ' (' + v.alasan + ')');
+}
+async function cekBukti() {
+  const kode = document.getElementById('kode-bukti').value.trim();
+  const r = await (await fetch('/bukti/' + encodeURIComponent(kode || '-'))).json();
+  document.getElementById('hasil-bukti').textContent = r.status;
 }
 async function ubah(nilai) {
   await fetch('/pemungutan/' + nilai, {method: 'POST'});
   muat();
 }
 muat();
-setInterval(muat, 2000);
+muatRantai();
+setInterval(() => { muat(); muatRantai(); }, 2000);
 </script>
 </body>
 </html>
