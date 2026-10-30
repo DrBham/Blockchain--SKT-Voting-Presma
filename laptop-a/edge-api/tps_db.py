@@ -65,6 +65,12 @@ def status_bukti(kode):
     return "antre di TPS" if baris["status"] == "antre" else "terkirim"
 
 
+def bukti_milik(pemilih_id):
+    with _kunci:
+        baris = _db.execute("SELECT bukti FROM suara WHERE pemilih_id = ?", (pemilih_id,)).fetchone()
+    return baris["bukti"] if baris else None
+
+
 def catat_tolak(pemilih_id, alasan):
     with _kunci:
         _db.execute("INSERT INTO tolak (pemilih_id, alasan, waktu) VALUES (?, ?, ?)",

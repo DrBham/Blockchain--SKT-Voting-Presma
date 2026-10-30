@@ -14,3 +14,13 @@ def periksa_nim(nim):
     if nim[0] not in FAKULTAS_UNTAD:
         return f"Kode Fakultas '{nim[0]}' tidak terdaftar di UNTAD!"
     return None
+
+
+# NIM akun simulasi untuk voter-sim dan ukur_voting.py, memakai pola DPT lama:
+# 3 fakultas x 5 angkatan x 10 orang = 150 akun
+NIM_SIMULASI = sorted(
+    f"{fak}{prodi}{th}{n:03d}"
+    for fak, prodi in (("A", "121"), ("C", "301"), ("F", "551"))
+    for th in ("19", "22", "23", "24", "25")
+    for n in range(1, 11)
+)
