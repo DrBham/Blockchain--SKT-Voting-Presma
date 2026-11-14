@@ -8,6 +8,8 @@ services:
     env_file: .env
     environment:
       SERVICE: edge-api
+      MAIL_HOST: mailpit  # kode pemilih dikirim ke Mailpit; bila gagal, kode dicetak di log edge-api
+      MAIL_PORT: "1025"
     volumes:
       - log-a:/log
       - data-tps:/data
@@ -16,6 +18,8 @@ services:
   voter-sim:
     build: ./voter-sim
     environment:
+      SIM_PASSWORD: ${SIM_PASSWORD:-pemilih-simulasi}  # sama dengan akun simulasi di edge-api
+      SIM_KODE: ${SIM_KODE:-123456}
       EDGE_URL: http://edge-api:8000
       INTERVAL_S: "2"
       SERVICE: voter-sim
@@ -23,6 +27,13 @@ services:
       - log-a:/log
     depends_on:
       - edge-api
+    restart: unless-stopped
+
+  mailpit:
+    image: axllent/mailpit:v1.27.0
+    ports:
+      - "1025:1025"  # SMTP
+      - "8025:8025"  # kotak masuk di http://localhost:8025
     restart: unless-stopped
 
 volumes:
