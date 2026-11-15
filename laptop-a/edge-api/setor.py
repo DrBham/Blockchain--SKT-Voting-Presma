@@ -3,6 +3,7 @@ import os
 import threading
 import time
 
+import akun
 import tps_db as db
 from kirim import kirim_rest
 
@@ -12,21 +13,27 @@ SETOR_MAKS = int(os.getenv("SETOR_MAKS", "20"))  # paling banyak sekian suara pe
 log = logging.getLogger("uvicorn.error")
 
 
+def setor_sekali():
+    terdaftar = akun.jumlah_aktif()
+    for s in db.ambil_antre(SETOR_MAKS):
+        pesan = {
+            "request_id": s["request_id"],  # sama setiap kali suara ini dikirim
+            "tps_id": TPS_ID,
+            "seq": s["seq"],
+            "pemilih_id": s["pemilih_id"],
+            "pilihan": s["pilihan"],
+            "waktu": s["waktu"],
+            "bukti": s["bukti"],  # dicocokkan ulang oleh pusat rekap
+            "terdaftar": terdaftar,  # akun aktif di TPS ini, pembagi partisipasi di papan
+        }
+        if not kirim_rest(pesan)["terkirim"]:
+            break  # pusat rekap belum terjangkau, coba lagi pada putaran berikutnya
+        db.tandai_terkirim(s["request_id"])
+
+
 def _putaran():
     while True:
-        for s in db.ambil_antre(SETOR_MAKS):
-            pesan = {
-                "request_id": s["request_id"],  # sama setiap kali suara ini dikirim
-                "tps_id": TPS_ID,
-                "seq": s["seq"],
-                "pemilih_id": s["pemilih_id"],
-                "pilihan": s["pilihan"],
-                "waktu": s["waktu"],
-                "bukti": s["bukti"],  # dicocokkan ulang oleh pusat rekap
-            }
-            if not kirim_rest(pesan)["terkirim"]:
-                break  # pusat rekap belum terjangkau, coba lagi pada putaran berikutnya
-            db.tandai_terkirim(s["request_id"])
+        setor_sekali()
         time.sleep(SETOR_TIAP_S)
 
 
