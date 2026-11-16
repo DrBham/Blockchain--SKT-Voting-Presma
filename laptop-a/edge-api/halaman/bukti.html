@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="color-scheme" content="dark">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bukti suara · Pemira Presma</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<link rel="icon" href="/static/logo-untad.png">
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body data-langkah="5">
+<div class="voter">
+<main class="stage" id="isi"><div class="stage-inner wide stack-lg enter">
+<div id="bukti">
+  <p class="eyebrow">Langkah 5 · Bukti</p>
+  <h1 id="judul" aria-live="polite">Suaramu diterima TPS</h1>
+  <p class="lead">Simpan kode bukti di bawah. Kode ini bisa dicek di TPS dan di papan hasil pusat rekap tanpa membuka pilihanmu</p>
+</div>
+
+<section class="card" id="ada" aria-labelledby="rincian-judul">
+  <div class="card-head"><h2 id="rincian-judul">Kode bukti suara</h2><span class="tag wait" id="tag-bukti">Antre di TPS</span></div>
+  <div class="miner">
+    <span class="k">kode bukti</span>
+    <span class="v" id="kode" style="font-size:28px;letter-spacing:.08em">memuat</span>
+    <span class="k">NIM <span id="nim-saya"></span></span>
+  </div>
+  <ol class="process" id="proses" aria-live="polite">
+    <li class="ok"><span class="dot"></span><span>Disimpan di TPS<small>tps.db di Laptop A, status antre</small></span></li>
+    <li class="run"><span class="dot"></span><span>Disetor ke pusat rekap<small>dikirim ulang otomatis bila jaringan putus</small></span></li>
+  </ol>
+  <div class="note" data-icon="lock" style="margin-top:16px">
+    <p>Pilihanmu tidak ditampilkan di sini. Cek kode ini di kolom cek bukti pada papan hasil Laptop B untuk melihat nomor block-nya</p>
+  </div>
+  <div class="actions">
+    <button class="btn btn-secondary" type="button" id="salin">Salin kode</button>
+    <button class="btn btn-ghost" type="button" data-keluar>Keluar</button>
+  </div>
+</section>
+
+<section class="card stack" id="belum" hidden>
+  <p class="tag wait">Belum ada suara</p>
+  <p class="soft">Sesi ini belum memasukkan suara. Buka bilik suara untuk memilih</p>
+  <div class="actions">
+    <a class="btn btn-primary" href="/bilik">Buka bilik suara</a>
+    <button class="btn btn-ghost" type="button" data-keluar>Keluar</button>
+  </div>
+</section>
+</div></main>
+</div>
+<script src="/static/pemilih.js"></script>
+</body>
+</html>

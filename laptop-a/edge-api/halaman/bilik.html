@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="color-scheme" content="dark">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bilik suara · Pemira Presma</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<link rel="icon" href="/static/logo-untad.png">
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body data-langkah="4">
+<div class="voter">
+<main class="stage" id="isi"><div class="stage-inner wide enter">
+<p class="eyebrow">Langkah 4 · Pemungutan</p>
+<h1>Bilik suara</h1>
+
+<section class="card stack" id="tutup" style="margin-top:24px" hidden>
+  <p class="tag wait">Bilik belum bisa dipakai</p>
+  <p class="soft" id="alasan-tutup" aria-live="polite"></p>
+  <div class="actions">
+    <button class="btn btn-ghost" type="button" data-keluar>Keluar</button>
+  </div>
+</section>
+
+<div id="isi-bilik" hidden>
+  <p class="lead">Masuk sebagai <b class="mono" id="nim-saya" style="font-weight:500;color:var(--ink)"></b>. Pilih satu pasangan calon. Setelah dikirim, suara tidak bisa diubah atau ditarik kembali</p>
+  <form id="form-bilik">
+    <fieldset class="ballot">
+      <legend class="sr">Surat suara Pemilihan Presiden Mahasiswa</legend>
+    </fieldset>
+    <div class="ballot-bar">
+      <p id="pilihan-teks" class="soft" aria-live="polite">Belum ada pilihan</p>
+      <button class="btn btn-primary" id="kirim" type="submit">Kirim suara</button>
+    </div>
+  </form>
+  <div class="note bad" id="galat-bilik" role="alert" style="margin-top:24px" hidden><p></p></div>
+  <div class="note" data-icon="lock" style="margin-top:24px">
+    <p>Suara disimpan di TPS ini lebih dulu, lalu disetor ke pusat rekap di Laptop B. Bila jaringan putus, suara menunggu di TPS dan dikirim begitu tersambung lagi</p>
+  </div>
+  <p class="small soft" style="margin-top:16px"><button class="linkish" type="button" data-keluar>Keluar tanpa memilih</button></p>
+</div>
+
+<dialog id="konfirmasi" aria-labelledby="dlg-judul">
+  <div class="dlg-body">
+    <h2 id="dlg-judul">Kirim suara ini?</h2>
+    <div class="picked">
+      <span class="no" id="dlg-no"></span>
+      <div><p id="dlg-nama"></p><p class="small muted">Tidak bisa diubah setelah dikirim</p></div>
+    </div>
+    <p class="soft" id="dlg-teks">Pastikan pilihanmu sudah benar. Pilih <b>Batal</b> untuk kembali ke surat suara dan memilih ulang</p>
+    <ol class="process" id="langkah-kirim" hidden>
+      <li class="run"><span class="dot"></span><span>Menyimpan suara di TPS<small>kode bukti dibuat dari isi suara</small></span></li>
+    </ol>
+  </div>
+  <div class="dlg-foot" id="dlg-foot">
+    <button class="btn btn-secondary" id="batal" type="button">Batal, pilih ulang</button>
+    <button class="btn btn-primary" id="setuju" type="button">Setuju, kirim suara</button>
+  </div>
+</dialog>
+</div></main>
+</div>
+<script src="/static/pemilih.js"></script>
+</body>
+</html>

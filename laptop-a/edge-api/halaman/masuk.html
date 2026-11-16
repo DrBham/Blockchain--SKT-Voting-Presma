@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="color-scheme" content="dark">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Masuk · Pemira Presma</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<link rel="icon" href="/static/logo-untad.png">
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body data-langkah="3">
+<div class="voter">
+<main class="stage" id="isi"><div class="stage-inner  enter">
+<p class="eyebrow">Langkah 3 · Masuk</p>
+<h1>Masuk ke bilik suara</h1>
+<p class="lead">Pakai NIM, password, dan kode pemilih dari email pendaftaran. Setelah masuk, bilik suara terbuka selama 15 menit</p>
+
+<form class="card" id="form-masuk" novalidate style="margin-top:24px">
+  <div class="field">
+      <label class="label" for="nim">NIM</label>
+      <input class="input mono" id="nim" autocomplete="username" placeholder="F55124111" maxlength="9" aria-describedby="nim-msg" required>
+      <p class="msg" id="nim-msg" aria-live="polite"></p>
+    </div>
+  <div class="field">
+    <label class="label" for="pw">Password</label>
+    <div class="input-wrap">
+      <input class="input" id="pw" type="password" autocomplete="current-password" aria-describedby="pw-msg" required>
+      <button class="peek" type="button" data-peek="pw" aria-controls="pw">Tampilkan</button>
+    </div>
+    <p class="msg" id="pw-msg" aria-live="polite"></p>
+  </div>
+  <div class="field">
+    <span class="label" id="kode-label">Kode pemilih</span>
+    <div class="otp" id="otp" role="group" aria-labelledby="kode-label">
+  <input inputmode="numeric" pattern="[0-9]*" maxlength="1" aria-label="Digit 1" autocomplete="one-time-code">
+  <input inputmode="numeric" pattern="[0-9]*" maxlength="1" aria-label="Digit 2" autocomplete="off">
+  <input inputmode="numeric" pattern="[0-9]*" maxlength="1" aria-label="Digit 3" autocomplete="off">
+  <input inputmode="numeric" pattern="[0-9]*" maxlength="1" aria-label="Digit 4" autocomplete="off">
+  <input inputmode="numeric" pattern="[0-9]*" maxlength="1" aria-label="Digit 5" autocomplete="off">
+  <input inputmode="numeric" pattern="[0-9]*" maxlength="1" aria-label="Digit 6" autocomplete="off">
+</div>
+    <p class="msg" id="otp-msg" aria-live="polite">Kode 6 digit dari email saat mendaftar. Hanya berlaku untuk satu kali memilih</p>
+  </div>
+  <div class="actions">
+    <button class="btn btn-primary btn-block" type="submit">Masuk dan buka bilik</button>
+  </div>
+  <p class="small soft" style="margin-top:12px">Lupa kodenya? Isi NIM, lalu <button class="linkish" type="button" id="kirim-ulang">kirim kode baru ke email</button></p>
+  <p class="alt">Belum punya akun? <a href="/pemilih/daftar">Daftar</a></p>
+</form>
+</div></main>
+</div>
+<script src="/static/pemilih.js"></script>
+</body>
+</html>
