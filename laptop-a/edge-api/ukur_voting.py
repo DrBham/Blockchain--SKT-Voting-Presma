@@ -9,9 +9,12 @@ import time
 
 import httpx
 
-from daftar import KANDIDAT, PEMILIH
+from daftar import KANDIDAT
+from nim import NIM_SIMULASI
 
 TPS = os.getenv("TPS_URL", "http://localhost:8000")
+SIM_PASSWORD = os.getenv("SIM_PASSWORD", "pemilih-simulasi")
+SIM_KODE = os.getenv("SIM_KODE", "123456")
 LOG_FILE = os.path.join(os.getenv("LOG_DIR", "/log"), "edge-api.jsonl")
 
 
@@ -60,10 +63,19 @@ if len(sys.argv) > 1 and sys.argv[1] == "beban":
         sys.exit("Pemungutan belum dibuka. Klik Buka di papan hasil lebih dulu.")
     if awal["masuk"] > 0:
         sys.exit("TPS belum kosong. Jalankan down -v di kedua laptop, lalu ulangi.")
+    # akun simulasi masuk lebih dulu, di luar pengukuran: p50/p95 tetap mengukur jalur suara
+    sesi = {}
+    for pemilih in NIM_SIMULASI[:jumlah]:
+        r = httpx.post(TPS + "/api/masuk", timeout=10, json={
+            "nim": pemilih, "password": SIM_PASSWORD, "kode": SIM_KODE})
+        if r.status_code != 200:
+            sys.exit(f"{pemilih} gagal masuk: {r.json().get('alasan')}. Cek SIM_PASSWORD dan SIM_KODE.")
+        sesi[pemilih] = r.json()["token"]
+    print(f"Akun simulasi masuk          : {len(sesi)}")
     mulai = time.time()
     diterima = 0
-    for pemilih in sorted(PEMILIH)[:jumlah]:
-        r = httpx.post(TPS + "/suara", timeout=10, json={
+    for pemilih, token in sesi.items():
+        r = httpx.post(TPS + "/suara", timeout=10, headers={"X-Sesi": token}, json={
             "pemilih_id": pemilih, "pilihan": random.choice(list(KANDIDAT))})
         diterima += r.json()["diterima"]
     selesai_terima = time.time()
