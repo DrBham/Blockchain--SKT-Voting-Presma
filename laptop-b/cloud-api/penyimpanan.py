@@ -11,9 +11,6 @@ IDEMPOTEN = os.getenv("IDEMPOTEN", "1") == "1"
 LAMBAT_PERSEN = int(os.getenv("LAMBAT_PERSEN", "0"))
 LAMBAT_MS = int(os.getenv("LAMBAT_MS", "1500"))
 
-# Jumlah pemilih di DPT Presma (lihat laptop-a/edge-api/daftar.py)
-JUMLAH_PEMILIH = 150
-
 _kunci = threading.Lock()
 
 _db = sqlite3.connect(
@@ -22,6 +19,9 @@ _db = sqlite3.connect(
 )
 
 _db.row_factory = sqlite3.Row
+
+# Tidak ada DPT: jumlah pemilih = akun aktif yang dilaporkan tiap TPS saat menyetor suara.
+_db.execute("CREATE TABLE IF NOT EXISTS tps (tps_id TEXT PRIMARY KEY, terdaftar INTEGER)")
 
 _db.execute("""
     CREATE TABLE IF NOT EXISTS suara (
@@ -51,6 +51,9 @@ def simpan(s):
     duplikat = False
 
     with _kunci:
+        if s.get("terdaftar"):
+            _db.execute("INSERT OR REPLACE INTO tps (tps_id, terdaftar) VALUES (?, ?)",
+                        (s["tps_id"], s["terdaftar"]))
         if IDEMPOTEN:
             sudah_ada = _db.execute(
                 "SELECT 1 FROM suara WHERE request_id = ?",
@@ -96,20 +99,22 @@ def simpan(s):
     }
 
 
-def catatan(per_kandidat, pemilih):
+def catatan(per_kandidat, pemilih, terdaftar):
     # FITUR 3: Catatan partisipasi Paket C
-    # Jumlah pemilih terdaftar = 150
+    # Pembagi = jumlah akun pemilih aktif yang dilaporkan semua TPS
 
     if not per_kandidat:
         return "Belum ada suara."
+    if not terdaftar:
+        return f"Partisipasi: {pemilih} pemilih."
 
     persentase = (
-        pemilih / JUMLAH_PEMILIH
+        pemilih / terdaftar
     ) * 100
 
     return (
         f"Partisipasi: {pemilih} dari "
-        f"{JUMLAH_PEMILIH} pemilih "
+        f"{terdaftar} pemilih terdaftar "
         f"({persentase:.1f}%)."
     )
 
@@ -135,6 +140,8 @@ def rekap():
             """
         ).fetchall()
 
+        terdaftar = _db.execute("SELECT COALESCE(SUM(terdaftar), 0) FROM tps").fetchone()[0]
+
         per_tps = _db.execute(
             """
             SELECT tps_id, COUNT(*)
@@ -156,9 +163,11 @@ def rekap():
             t: n
             for t, n in per_tps
         },
+        "terdaftar": terdaftar,
         "catatan": catatan(
             {k: n for k, n in per_kandidat},
-            pemilih
+            pemilih,
+            terdaftar
         )
     }
 

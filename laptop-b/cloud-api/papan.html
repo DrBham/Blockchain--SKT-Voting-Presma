@@ -2,61 +2,86 @@
 <html lang="id">
 <head>
 <meta charset="utf-8">
+<meta name="color-scheme" content="dark">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Papan Hasil - Pemilihan Presma UNTAD</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
 <style>
-  body { font-family: Segoe UI, Arial, sans-serif; background: #EDF1F4; color: #16232E; margin: 0; }
-  main { max-width: 760px; margin: 28px auto; background: #fff; padding: 28px 32px;
-         border-radius: 12px; border: 1px solid #D3DBE1; }
-  h1 { margin: 0 0 4px; font-size: 26px; }
-  .redup { color: #6B7C8A; margin: 0 0 18px; }
-  .kotak { display: flex; gap: 12px; margin: 16px 0; }
-  .kotak div { flex: 1; background: #EDF1F4; border-radius: 10px; padding: 12px 14px; }
-  .kotak b { display: block; font-size: 26px; }
-  .buruk b { color: #B5392B; }
-  #catatan { background: #ECF4F8; color: #1C7293; padding: 10px 14px; border-radius: 8px; }
-  .baris { display: flex; align-items: center; gap: 10px; margin: 8px 0; }
-  .baris span { width: 110px; }
-  .batang { background: #1C7293; height: 26px; border-radius: 6px; min-width: 2px; }
-  button { padding: 8px 14px; border: 0; border-radius: 8px; color: #fff; cursor: pointer;
-           font-size: 15px; background: #1C7293; }
-  button.tutup { background: #D97D28; }
-  #status { font-weight: bold; }
-  input[type=text] { padding: 8px; font-size: 15px; border: 1px solid #D3DBE1; border-radius: 8px; width: 220px; }
-  #hasil-bukti { font-weight: bold; margin-left: 8px; }
-  .rantai-baik { color: #1C7293; } .rantai-buruk { color: #B5392B; }
+  /* tema slate yang sama dengan bilik TPS dan web project Blockchain */
+  :root { --bg: #171B21; --rail: #13161B; --card: #1E232A; --raised: #262C34; --line: rgba(200,210,222,.14);
+          --soft: rgba(200,210,222,.08); --ink: #D5DAE0; --ink-2: #A3ACB6; --muted: #7E8892;
+          --accent: #9C4F58; --accent-hover: #A85A63; --accent-ink: #E0A3AA; --on-accent: #F7EDEE;
+          --gold: #C4A86A; --ok: #86B89C; --danger: #E0868D;
+          --font: "Plus Jakarta Sans", system-ui, "Segoe UI", sans-serif; --mono: "JetBrains Mono", Consolas, monospace; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: var(--font); font-size: 15px; line-height: 1.55; background: var(--bg); color: var(--ink); }
+  main { max-width: 880px; margin: 0 auto; padding: 40px 24px 64px; }
+  h1 { margin: 0; font-size: 30px; font-weight: 500; }
+  h2 { margin: 0 0 12px; font-size: 16px; font-weight: 500; }
+  .redup { color: var(--muted); margin: 4px 0 24px; }
+  .card { background: var(--card); border: 1px solid var(--soft); border-radius: 14px; padding: 20px 24px; margin-top: 16px; }
+  .baris-atas { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+  .tag { display: inline-flex; align-items: center; gap: 8px; color: var(--ink-2); }
+  .tag::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+  .tag.buka::before { background: var(--ok); } .tag.tutup::before { background: var(--danger); }
+  #status { font-weight: 500; color: var(--ink); }
+  .kotak { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 16px; }
+  .kotak div { background: var(--card); border: 1px solid var(--soft); border-radius: 14px; padding: 16px 20px; color: var(--ink-2); font-size: 13px; }
+  .kotak b { display: block; font-size: 30px; font-weight: 500; color: var(--ink); font-variant-numeric: tabular-nums; }
+  .kotak .buruk b { color: var(--danger); }
+  #catatan { margin: 16px 0 0; padding: 12px 14px; border-radius: 10px; background: var(--raised); color: var(--ink-2); }
+  .baris { display: grid; grid-template-columns: 110px 1fr 48px; align-items: center; gap: 12px; margin: 10px 0; }
+  .baris b { text-align: right; font-weight: 500; font-variant-numeric: tabular-nums; }
+  .jalur { height: 10px; background: var(--raised); border-radius: 6px; overflow: hidden; }
+  .batang { height: 100%; background: var(--accent-ink); border-radius: 6px; transition: width .4s cubic-bezier(.22,1,.36,1); }
+  button { min-height: 36px; padding: 0 16px; border: 1px solid var(--soft); border-radius: 10px; cursor: pointer;
+           font: inherit; font-weight: 500; background: var(--raised); color: var(--ink); transition: background-color .15s; }
+  button:hover { background: #2D343D; }
+  button.utama { background: var(--accent); border-color: transparent; color: var(--on-accent); }
+  button.utama:hover { background: var(--accent-hover); }
+  button:focus-visible, input:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(224,163,170,.4); }
+  input[type=text] { min-height: 40px; padding: 8px 12px; font: 15px var(--mono); border: 1px solid var(--line);
+                     border-radius: 10px; background: var(--rail); color: var(--ink); width: min(260px, 100%); }
+  #hasil-bukti { margin-left: 8px; color: var(--ink-2); }
+  #rantai { font-family: var(--mono); font-size: 13px; overflow-wrap: anywhere; margin: 0; }
+  .rantai-baik { color: var(--ok); } .rantai-buruk { color: var(--danger); }
+  @media (max-width: 600px) { .kotak { grid-template-columns: 1fr; } main { padding: 24px 16px 48px; } }
 </style>
 </head>
 <body>
 <main>
   <h1>Papan Hasil</h1>
   <p class="redup">Pusat rekap (cloud-api di Laptop B). Diperbarui setiap 2 detik.</p>
-  <p>Pemungutan: <span id="status">-</span>
-     <button onclick="ubah('buka')">Buka</button>
-     <button class="tutup" onclick="ubah('tutup')">Tutup</button></p>
+  <div class="card baris-atas">
+    <span class="tag" id="tag-status">Pemungutan: <span id="status">-</span></span>
+    <span style="flex:1"></span>
+    <button class="utama" onclick="ubah('buka')">Buka</button>
+    <button onclick="ubah('tutup')">Tutup</button>
+  </div>
   <div class="kotak">
     <div><b id="total">0</b>total suara</div>
     <div id="kotak-kiriman"><b id="kiriman">0</b>kiriman ganda</div>
     <div id="kotak-pemilih"><b id="pemilih">0</b>pemilih ganda</div>
   </div>
   <p id="catatan"></p>
-  <h3>Per paslon</h3>
-  <div id="kandidat"></div>
-  <h3>Per TPS</h3>
-  <div id="tps"></div>
-  <h3>Cek bukti suara</h3>
-  <p><input type="text" id="kode-bukti" placeholder="16 karakter kode bukti">
-     <button onclick="cekBukti()">Cek</button><span id="hasil-bukti"></span></p>
-  <h3>Rantai block</h3>
-  <p id="rantai">-</p>
+  <section class="card"><h2>Per paslon</h2><div id="kandidat"></div></section>
+  <section class="card"><h2>Per TPS</h2><div id="tps"></div></section>
+  <section class="card"><h2>Cek bukti suara</h2>
+    <p style="margin:0"><input type="text" id="kode-bukti" placeholder="16 karakter kode bukti" aria-label="Kode bukti">
+       <button onclick="cekBukti()">Cek</button><span id="hasil-bukti" aria-live="polite"></span></p></section>
+  <section class="card"><h2>Rantai block</h2><p id="rantai">-</p></section>
 </main>
 <script>
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 function batang(nama, n, maks) {
-  return '<div class="baris"><span>' + nama + '</span><div class="batang" style="width:' +
-         Math.round(400 * n / Math.max(maks, 1)) + 'px"></div><b>' + n + '</b></div>';
+  return '<div class="baris"><span>' + esc(nama) + '</span><div class="jalur"><div class="batang" style="width:' +
+         Math.round(100 * n / Math.max(maks, 1)) + '%"></div></div><b>' + n + '</b></div>';
 }
 async function muat() {
   const r = await (await fetch('/rekap')).json();
   document.getElementById('status').textContent = r.pemungutan;
+  document.getElementById('tag-status').className = 'tag ' + (r.pemungutan === 'buka' ? 'buka' : r.pemungutan === 'tutup' ? 'tutup' : '');
   document.getElementById('total').textContent = r.total_suara;
   document.getElementById('kiriman').textContent = r.kiriman_ganda;
   document.getElementById('pemilih').textContent = r.pemilih_ganda;

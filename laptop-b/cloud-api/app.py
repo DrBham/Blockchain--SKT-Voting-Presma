@@ -63,6 +63,7 @@ class Suara(BaseModel):
     waktu: int
     lamport: int = 0
     bukti: str = ""  # boleh kosong agar kiriman tanpa token tetap dijawab 401
+    terdaftar: int = 0  # jumlah akun pemilih aktif di TPS pengirim (pembagi partisipasi)
 
 
 @app.post("/suara", status_code=201)
@@ -100,7 +101,7 @@ def terima_suara(
 
     hasil = db.simpan(s.model_dump())
     if hasil["tersimpan"]:
-        rantai.tambah_pool(s.model_dump(exclude={"lamport"}))
+        rantai.tambah_pool(s.model_dump(exclude={"lamport", "terdaftar"}))
 
     return {
         **hasil,

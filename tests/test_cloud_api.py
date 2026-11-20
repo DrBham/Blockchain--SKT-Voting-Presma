@@ -131,3 +131,13 @@ def test_rantai_rusak_suara_tercatat_ulang(tmp_path):
     assert tunggu(lambda: status(c2, s["bukti"]).startswith("tercatat"))
     assert c2.get("/rantai/validasi").json()["valid"] is False
     app2.berhenti.set()
+
+
+def test_partisipasi_dari_akun_terdaftar_tps(klien):
+    c, _, _ = klien
+    assert c.get("/rekap").json()["terdaftar"] == 0
+    s = buat_suara()
+    assert c.post("/suara", json={**s, "terdaftar": 4}, headers=H).status_code == 201
+    r = c.get("/rekap").json()
+    assert r["terdaftar"] == 4
+    assert "1 dari 4 pemilih terdaftar (25.0%)" in r["catatan"]
