@@ -43,11 +43,40 @@ def test_validasi_deteksi_ubah(tmp_path):
     assert (ok, rusak) == (False, 1) and "hash" in alasan
 
 
-def test_file_rusak_mulai_dari_genesis(tmp_path):
+def test_file_rusak_dilaporkan_dan_disimpan(tmp_path):
     p = tmp_path / "c.json"
     p.write_text("{bukan json")
     r = Rantai(str(p), 2)
-    assert r.ringkas()["panjang"] == 1 and r.validasi()[0]
+    assert r.ringkas()["panjang"] == 1
+    assert r.validasi()[:2] == (False, 0) and "rusak" in r.validasi()[2]
+    assert (tmp_path / "c.json.rusak").read_text() == "{bukan json"
+    r.tambah_pool(TX)
+    r.tambang()  # block baru tidak menghapus laporan kerusakan
+    assert Rantai(str(p), 2).validasi()[0] is False
+
+
+def test_isi_aneh_tidak_crash(tmp_path):
+    p = tmp_path / "c.json"
+    r = Rantai(str(p), 2)
+    r.tambah_pool(TX)
+    r.tambang()
+    data = json.loads(p.read_text())
+    data[1]["transaksi"] = 5
+    data[1]["hash"] = 123
+    p.write_text(json.dumps(data))
+    r2 = Rantai(str(p), 2)
+    assert r2.validasi()[:2] == (False, 1) and r2.ringkas()["terakhir"] == "123"
+
+
+def test_simpan_gagal_tidak_mengubah_memori(tmp_path, monkeypatch):
+    r = Rantai(str(tmp_path / "c.json"), 2)
+    r.tambah_pool(TX)
+    monkeypatch.setattr(r, "_simpan", lambda chain: (_ for _ in ()).throw(OSError("disk penuh")))
+    try:
+        r.tambang()
+    except OSError:
+        pass
+    assert len(r.chain) == 1 and r.di_pool(TX["bukti"]) and r.cari(TX["bukti"]) is None
 
 
 def test_block_tanpa_field_tidak_crash(tmp_path):

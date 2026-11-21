@@ -99,3 +99,35 @@ def test_bukti_input_aneh(klien):
     c, _, _ = klien
     assert status(c, "%20ABC") == "tidak ditemukan"
     assert status(c, "z" * 16) == "tidak ditemukan"
+
+
+def test_penambang_tetap_hidup_setelah_error(klien, monkeypatch):
+    c, app, _ = klien
+    asli, gagal = app.db.tandai_block, {"sekali": True}
+
+    def tandai(daftar, index):
+        if gagal.pop("sekali", False):
+            raise RuntimeError("gangguan sesaat")
+        asli(daftar, index)
+
+    monkeypatch.setattr(app.db, "tandai_block", tandai)
+    c.post("/suara", json=buat_suara(1), headers=H)
+    time.sleep(0.3)
+    s2 = buat_suara(2, "F55125002")
+    c.post("/suara", json=s2, headers=H)
+    assert tunggu(lambda: status(c, s2["bukti"]).startswith("tercatat"))
+
+
+def test_rantai_rusak_suara_tercatat_ulang(tmp_path):
+    app = muat_app(tmp_path)
+    c = TestClient(app.app)
+    s = buat_suara()
+    c.post("/suara", json=s, headers=H)
+    assert tunggu(lambda: status(c, s["bukti"]).startswith("tercatat"))
+    app.berhenti.set()
+    (tmp_path / "rantai.json").write_text("[{rusak")
+    app2 = muat_app(tmp_path)
+    c2 = TestClient(app2.app)
+    assert tunggu(lambda: status(c2, s["bukti"]).startswith("tercatat"))
+    assert c2.get("/rantai/validasi").json()["valid"] is False
+    app2.berhenti.set()

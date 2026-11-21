@@ -15,6 +15,6 @@ def hitung(pesan):
 
 
 def rapikan(kode):
-    """Kode bukti yang diketik pemilih: buang spasi, huruf kecil. None bila bukan 16 hex."""
-    kode = str(kode).strip().lower()
+    """Kode bukti yang diketik pemilih: buang spasi dan strip, huruf kecil. None bila bukan 16 hex."""
+    kode = re.sub(r"[\s-]+", "", str(kode)).lower()
     return kode if POLA.fullmatch(kode) else None

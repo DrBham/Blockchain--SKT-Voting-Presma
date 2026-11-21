@@ -215,8 +215,8 @@ def tandai_block(daftar_bukti, index):
         _db.commit()
 
 
-def belum_ditambang():
-    # suara yang sudah diterima tetapi belum tercatat di block (mis. cloud-api di-restart)
+def semua_suara():
+    # dipakai saat start untuk mencocokkan isi SQLite dengan rantai
     with _kunci:
-        baris = _db.execute("SELECT * FROM suara WHERE block IS NULL ORDER BY id").fetchall()
+        baris = _db.execute("SELECT * FROM suara ORDER BY id").fetchall()
     return [dict(b) for b in baris]

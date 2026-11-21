@@ -31,8 +31,9 @@ class Rantai:
         self.pool = []
         self.chain = self._muat()
         # berkas yang diubah tangan tidak boleh membuat service mati; validasi() yang melaporkannya
-        self._lokasi = {tx.get("bukti"): b.get("index") for b in self.chain
-                        for tx in (b.get("transaksi") or []) if isinstance(tx, dict)}
+        self._lokasi = {tx["bukti"]: b.get("index") for b in self.chain
+                        if isinstance(b.get("transaksi"), list)
+                        for tx in b["transaksi"] if isinstance(tx, dict) and isinstance(tx.get("bukti"), str)}
 
     def _muat(self):
         try:
@@ -44,13 +45,15 @@ class Rantai:
             return [buat_genesis()]
         except (OSError, ValueError):
             pass
-        log.warning("rantai: berkas %s rusak, mulai dari genesis", self.path)
+        # berkas rusak disimpan sebagai bukti, tidak ditimpa; validasi() terus melaporkannya
+        os.replace(self.path, self.path + ".rusak")
+        log.warning("rantai: berkas %s rusak, disimpan sebagai .rusak, mulai dari genesis", self.path)
         return [buat_genesis()]
 
-    def _simpan(self):
+    def _simpan(self, chain):
         sementara = self.path + ".tmp"
         with open(sementara, "w", encoding="utf-8") as f:
-            json.dump(self.chain, f)
+            json.dump(chain, f)
         os.replace(sementara, self.path)  # ganti utuh: tidak ada berkas setengah tertulis
 
     def tambah_pool(self, tx):
@@ -76,11 +79,12 @@ class Rantai:
             block["nonce"] += 1
             block["hash"] = hitung_hash(block)
         with self._kunci:
-            self.chain.append(block)
+            chain_baru = self.chain + [block]
+            self._simpan(chain_baru)  # tulis berkas dulu: bila gagal, memori tetap seperti semula
+            self.chain = chain_baru
             masuk = {tx["bukti"] for tx in transaksi}
+            self._lokasi.update((kode, block["index"]) for kode in masuk)  # sebelum pool, agar status tidak berkedip
             self.pool = [tx for tx in self.pool if tx["bukti"] not in masuk]
-            self._lokasi.update((kode, block["index"]) for kode in masuk)
-            self._simpan()
         return block
 
     def cari(self, kode):
@@ -91,6 +95,8 @@ class Rantai:
 
     def validasi(self):
         """(valid, index block pertama yang rusak, alasan)."""
+        if os.path.exists(self.path + ".rusak"):
+            return False, 0, f"berkas rantai rusak (disimpan di {os.path.basename(self.path)}.rusak), rantai dimulai ulang"
         with self._kunci:
             chain = list(self.chain)
         if chain[0] != buat_genesis():
@@ -105,11 +111,11 @@ class Rantai:
                     return False, i, "hash tidak cocok dengan isi block (data berubah)"
             except (KeyError, TypeError):
                 return False, i, "struktur block tidak lengkap"
-            if not b["hash"].startswith(target):
+            if not str(b["hash"]).startswith(target):
                 return False, i, f"proof of work tidak valid (hash tidak diawali {target})"
         return True, None, "rantai valid"
 
     def ringkas(self):
         with self._kunci:
             return {"panjang": len(self.chain), "difficulty": self.difficulty,
-                    "pool": len(self.pool), "terakhir": self.chain[-1].get("hash", "")[:16]}
+                    "pool": len(self.pool), "terakhir": str(self.chain[-1].get("hash", ""))[:16]}

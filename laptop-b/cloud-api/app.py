@@ -1,6 +1,7 @@
 
 import os
 import hmac
+import logging
 import threading
 from pathlib import Path
 
@@ -17,13 +18,14 @@ from rantai import Rantai
 
 TPS_TOKEN = os.getenv("TPS_TOKEN", "")
 TAMBANG_TIAP_S = float(os.getenv("TAMBANG_TIAP_S", "3"))
+log = logging.getLogger("uvicorn.error")
 
 app = FastAPI(title="cloud-api (pusat rekap)")
 
-# Rantai block pencatat suara. Suara yang sudah diterima tetapi belum masuk block
-# (mis. cloud-api di-restart) dimasukkan lagi ke pool supaya tidak hilang.
+# Rantai block pencatat suara. Suara yang sudah diterima tetapi tidak ada di rantai
+# (cloud-api di-restart sebelum ditambang, atau berkas rantai rusak) dimasukkan lagi ke pool.
 rantai = Rantai(os.getenv("RANTAI_PATH", "/data/rantai.json"), int(os.getenv("DIFFICULTY", "3")))
-for _s in db.belum_ditambang():
+for _s in db.semua_suara():
     if rantai.cari(_s["bukti"]) is not None:
         db.tandai_block([_s["bukti"]], rantai.cari(_s["bukti"]))
     else:
@@ -33,10 +35,13 @@ for _s in db.belum_ditambang():
 def _penambang(berhenti):
     # bekerja di latar: proof of work tidak pernah memperlambat POST /suara
     while not berhenti.is_set():
-        block = rantai.tambang()
-        if block:
-            db.tandai_block([tx["bukti"] for tx in block["transaksi"]], block["index"])
-            clock.lokal("tambang", block=block["index"], jumlah=len(block["transaksi"]))
+        try:
+            block = rantai.tambang()
+            if block:
+                db.tandai_block([tx["bukti"] for tx in block["transaksi"]], block["index"])
+                clock.lokal("tambang", block=block["index"], jumlah=len(block["transaksi"]))
+        except Exception:  # gangguan sesaat (disk, SQLite) tidak boleh mematikan penambang
+            log.exception("penambang: gagal, dicoba lagi pada putaran berikutnya")
         berhenti.wait(TAMBANG_TIAP_S)
 
 

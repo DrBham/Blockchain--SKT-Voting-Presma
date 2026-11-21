@@ -24,6 +24,7 @@ def test_rapikan():
     b = muat(EDGE)
     k = b.hitung(P)
     assert b.rapikan(f"  {k.upper()} ") == k
+    assert b.rapikan(f"{k[:4]} {k[4:8]}-{k[8:]}") == k  # diketik dengan spasi/strip
     assert b.rapikan("abc") is None and b.rapikan("z" * 16) is None
 
 
