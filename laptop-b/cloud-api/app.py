@@ -6,7 +6,7 @@ import threading
 from pathlib import Path
 
 from fastapi import FastAPI, Header, HTTPException
-from fastapi.responses import HTMLResponse
+from fastapi.responses import FileResponse, HTMLResponse
 from pydantic import BaseModel
 
 import bukti
@@ -143,6 +143,11 @@ def papan():
     return Path("papan.html").read_text(
         encoding="utf-8"
     )
+
+
+@app.get("/logo-untad.png")
+def logo():
+    return FileResponse("logo-untad.png", media_type="image/png")
 
 
 @app.get("/event")
