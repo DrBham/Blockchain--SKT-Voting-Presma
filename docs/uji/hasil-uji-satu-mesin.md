@@ -13,12 +13,7 @@ suara palsu 1 -> 401 {"detail":"token TPS salah"}
 suara palsu 2 -> 401 {"detail":"token TPS salah"}
 ```
 
-Dengan token yang bocor (`TOKEN_GADUNGAN=$TPS_TOKEN`), suara palsu tetap ditolak oleh aturan bukti suara:
-
-```text
-suara palsu 1 -> 422 {"detail":"bukti tidak cocok dengan isi suara"}
-suara palsu 2 -> 422 {"detail":"bukti tidak cocok dengan isi suara"}
-```
+Kiriman yang membawa token benar tetapi kode buktinya tidak cocok dengan isi suara ditolak `422 bukti tidak cocok dengan isi suara` (terlihat pada run pertama di bawah). Ini cek keutuhan isi suara, bukan pengganti token: pihak yang memegang token bisa menghitung kode bukti sendiri.
 
 ## Output lengkap
 

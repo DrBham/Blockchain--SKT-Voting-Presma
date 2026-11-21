@@ -33,7 +33,7 @@ The app keeps the structure of the course's Practicum 5 voting system, so the te
 | --- | --- |
 | Validation at the station | Rejects closed voting, bad NIM format, unknown faculty code, voters not in the DPT, unknown candidates, and second votes, with the reason shown |
 | Buffer and retry | Valid votes are stored at the station (`antre`) and sent in the background, with retries until the tally center answers |
-| Token | The tally center only accepts deliveries with the right `X-TPS-Token` (401 otherwise) |
+| Token | The tally center only accepts deliveries with the right `X-TPS-Token` (401 otherwise). The receipt is an integrity check, not a second password: anyone holding the token can compute it |
 | Idempotent delivery | A vote resent after a lost reply is stored once (same `request_id`) and enters the chain once |
 | Lamport clock | Every send and receive carries a Lamport value, logged as JSON lines for `uji_urutan.py` |
 | Hash chain | A background miner packs pooled votes into blocks (difficulty from `.env`); the chain is saved to disk and survives restarts |
@@ -132,8 +132,6 @@ Commands run on Laptop A from the `laptop-a` folder.
 | Performance | `docker compose exec edge-api python ukur_voting.py beban 150` on fresh volumes |
 | Network cut ≥60 s | Unplug for a minute; `antre` grows on A, then drains; board shows no duplicates and the chain stays valid |
 | Vote receipt | Copy the receipt from the booth and check it on the board before, during, and after the cut |
-
-A leaked token is still not enough to forge votes: `TOKEN_GADUNGAN=<token> python tps_gadungan.py` gets `422 bukti tidak cocok dengan isi suara`.
 
 Results from a single-machine run (outage simulated by stopping `cloud-api` for 65 seconds) are in [docs/uji/hasil-uji-satu-mesin.md](docs/uji/hasil-uji-satu-mesin.md): 150 votes delivered at 8.1 votes per second (latency p50 8.35 s, p95 16.97 s), no lost or duplicate votes after the outage, and a valid chain. The two-laptop run still has to be done by the group.
 
