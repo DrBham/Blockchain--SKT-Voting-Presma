@@ -5,117 +5,398 @@
 <meta name="color-scheme" content="dark">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Papan Hasil - Pemilihan Presma UNTAD</title>
+<link rel="icon" href="/logo-untad.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
 <style>
-  /* tema slate yang sama dengan bilik TPS dan web project Blockchain */
-  :root { --bg: #171B21; --rail: #13161B; --card: #1E232A; --raised: #262C34; --line: rgba(200,210,222,.14);
-          --soft: rgba(200,210,222,.08); --ink: #D5DAE0; --ink-2: #A3ACB6; --muted: #7E8892;
-          --accent: #9C4F58; --accent-hover: #A85A63; --accent-ink: #E0A3AA; --on-accent: #F7EDEE;
-          --gold: #C4A86A; --ok: #86B89C; --danger: #E0868D;
-          --font: "Plus Jakarta Sans", system-ui, "Segoe UI", sans-serif; --mono: "JetBrains Mono", Consolas, monospace; }
+  /* Pusat rekap: hasil di kiri, alat periksa di kanan. Palet slate yang sama dengan bilik TPS. */
+  :root {
+    --rail: #13161B; --bg: #171B21; --card: #1E232A; --raised: #262C34; --hover: #2D343D;
+    --line: rgba(200,210,222,.14); --soft: rgba(200,210,222,.08);
+    --ink: #D5DAE0; --ink-2: #A3ACB6; --muted: #7E8892;
+    --accent: #9C4F58; --accent-hover: #A85A63; --on-accent: #F7EDEE;
+    --p1: #E0A3AA; --p2: #93A9C6;            /* dua seri batang adu, kecerahan setara */
+    --gold: #C4A86A; --ok: #86B89C; --danger: #E0868D;
+    --font: "Plus Jakarta Sans", system-ui, "Segoe UI", sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+    --ease: cubic-bezier(.22, 1, .36, 1);
+  }
   * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
   body { margin: 0; font-family: var(--font); font-size: 15px; line-height: 1.55; background: var(--bg); color: var(--ink); }
-  main { max-width: 880px; margin: 0 auto; padding: 40px 24px 64px; }
-  h1 { margin: 0; font-size: 30px; font-weight: 500; }
-  h2 { margin: 0 0 12px; font-size: 16px; font-weight: 500; }
-  .redup { color: var(--muted); margin: 4px 0 24px; }
-  .card { background: var(--card); border: 1px solid var(--soft); border-radius: 14px; padding: 20px 24px; margin-top: 16px; }
-  .baris-atas { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
-  .tag { display: inline-flex; align-items: center; gap: 8px; color: var(--ink-2); }
-  .tag::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
-  .tag.buka::before { background: var(--ok); } .tag.tutup::before { background: var(--danger); }
-  #status { font-weight: 500; color: var(--ink); }
-  .kotak { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 16px; }
-  .kotak div { background: var(--card); border: 1px solid var(--soft); border-radius: 14px; padding: 16px 20px; color: var(--ink-2); font-size: 13px; }
-  .kotak b { display: block; font-size: 30px; font-weight: 500; color: var(--ink); font-variant-numeric: tabular-nums; }
-  .kotak .buruk b { color: var(--danger); }
-  #catatan { margin: 16px 0 0; padding: 12px 14px; border-radius: 10px; background: var(--raised); color: var(--ink-2); }
-  .baris { display: grid; grid-template-columns: 110px 1fr 48px; align-items: center; gap: 12px; margin: 10px 0; }
-  .baris b { text-align: right; font-weight: 500; font-variant-numeric: tabular-nums; }
-  .jalur { height: 10px; background: var(--raised); border-radius: 6px; overflow: hidden; }
-  .batang { height: 100%; background: var(--accent-ink); border-radius: 6px; transition: width .4s cubic-bezier(.22,1,.36,1); }
-  button { min-height: 36px; padding: 0 16px; border: 1px solid var(--soft); border-radius: 10px; cursor: pointer;
-           font: inherit; font-weight: 500; background: var(--raised); color: var(--ink); transition: background-color .15s; }
-  button:hover { background: #2D343D; }
+  h1, h2 { margin: 0; font-weight: 500; }
+  h2 { font-size: 15px; }
+  p { margin: 0; }
+  .muted { color: var(--muted); } .soft { color: var(--ink-2); } .small { font-size: 12px; }
+  .num { font-variant-numeric: tabular-nums; }
+  .mono { font-family: var(--mono); font-size: 13px; }
+  .pow { color: var(--gold); }
+  :focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(224,163,170,.4); border-radius: 8px; }
+  kbd { font: 11px var(--mono); padding: 1px 6px; border-radius: 4px; border: 1px solid var(--line); background: var(--raised); color: var(--ink-2); }
+
+  header { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; gap: 24px; flex-wrap: wrap; padding: 12px 32px;
+           background: rgba(19,22,27,.92); backdrop-filter: blur(8px); border-bottom: 1px solid var(--soft); }
+  .merek { display: flex; align-items: center; gap: 12px; }
+  .merek img { width: 34px; height: 35px; }
+  .merek b { display: block; font-weight: 500; font-size: 16px; line-height: 1.2; }
+  .merek small { color: var(--muted); font-size: 12px; }
+  .status { display: inline-flex; align-items: center; gap: 8px; padding: 4px 12px; border-radius: 16px; background: var(--card); border: 1px solid var(--soft); color: var(--ink-2); font-size: 14px; }
+  .status::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+  .status.buka::before { background: var(--ok); box-shadow: 0 0 0 3px rgba(134,184,156,.18); }
+  .status.tutup::before { background: var(--danger); }
+  #status { color: var(--ink); font-weight: 500; }
+  .geser { margin-left: auto; display: flex; align-items: center; gap: 16px; }
+  .saklar { display: inline-flex; padding: 4px; gap: 4px; border-radius: 12px; background: var(--card); border: 1px solid var(--soft); }
+  .saklar button { min-height: 32px; padding: 0 16px; border: 0; border-radius: 8px; background: transparent; color: var(--ink-2);
+                   font: inherit; font-weight: 500; cursor: pointer; transition: background-color .15s var(--ease), color .15s var(--ease); }
+  .saklar button:hover { color: var(--ink); background: var(--raised); }
+  .saklar button[aria-pressed="true"] { background: var(--raised); color: var(--ink); }
+  .saklar button[data-nilai="buka"][aria-pressed="true"] { background: var(--accent); color: var(--on-accent); }
+  .saklar button:active, button.biasa:active { transform: scale(.97); }
+
+  /* dua kolom mengalir sendiri; kartu terakhir yang bisa tumbuh mengisi sisa, jadi bagian bawah kedua kolom rata */
+  main { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 24px; max-width: 1440px; margin: 0 auto; padding: 32px; }
+  .kolom { display: flex; flex-direction: column; gap: 24px; }
+  #k-feed, #k-rantai { flex: 1; }
+  .kartu { background: var(--card); border: 1px solid var(--soft); border-radius: 16px; padding: 24px; animation: naik .4s var(--ease) both; }
+  .kolom > .kartu:nth-child(2) { animation-delay: .05s; } .kolom > .kartu:nth-child(3) { animation-delay: .1s; } .kolom > .kartu:nth-child(4) { animation-delay: .15s; }
+  @keyframes naik { from { opacity: 0; transform: translateY(8px); } }
+  @keyframes muncul { from { opacity: 0; transform: translateY(-4px); } }
+  .judul { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+
+  /* total + laju suara: tetap ringkas walau pemilih ribuan */
+  .total { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 32px; align-items: end; }
+  .angka-besar { font-size: 64px; line-height: 1; font-weight: 500; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+  .naik-baru { display: inline-block; margin-left: 8px; font-size: 14px; color: var(--ok); opacity: 0; transition: opacity .3s var(--ease); vertical-align: top; }
+  .naik-baru.tampil { opacity: 1; }
+  .laju { justify-self: end; text-align: right; }
+  .laju b { font-size: 24px; font-weight: 500; font-variant-numeric: tabular-nums; }
+  .spark { display: flex; align-items: flex-end; gap: 3px; height: 48px; margin-top: 8px; }
+  .spark i { width: 6px; min-height: 2px; border-radius: 2px; background: var(--raised); transition: height .4s var(--ease); }
+  .spark i:last-child { background: var(--ink-2); }
+  .partisipasi { margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--soft); }
+  .meter { height: 6px; border-radius: 3px; background: var(--raised); overflow: hidden; margin-top: 8px; }
+  .meter i { display: block; height: 100%; width: 100%; background: var(--ink-2); border-radius: 3px; transition: transform .6s var(--ease); transform-origin: left; }
+
+  /* batang adu */
+  .adu-angka { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; }
+  .sisi b { display: block; font-size: 44px; line-height: 1; font-weight: 500; font-variant-numeric: tabular-nums; }
+  .sisi span { font-size: 13px; color: var(--ink-2); }
+  .sisi.kanan { text-align: right; }
+  .adu-batang { position: relative; display: flex; height: 24px; margin-top: 16px; border-radius: 8px; overflow: hidden; background: var(--raised); gap: 2px; }
+  .adu-batang i { display: block; height: 100%; transition: flex-grow .6s var(--ease), filter .15s var(--ease); }
+  .adu-batang i:hover { filter: brightness(1.12); }
+  .adu-batang::after { content: ""; position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: rgba(19,22,27,.6); }
+  .adu-tengah { display: flex; justify-content: space-between; margin-top: 8px; }
+  .lain { display: grid; gap: 8px; }
+
+  .baris { display: grid; grid-template-columns: minmax(0, 160px) minmax(0, 1fr) 56px; gap: 16px; align-items: center; padding: 10px 0; border-top: 1px solid var(--soft); }
+  .baris:first-child { border-top: 0; }
+  .garis { height: 4px; border-radius: 2px; background: var(--raised); overflow: hidden; }
+  .garis i { display: block; height: 100%; background: var(--muted); transition: width .6s var(--ease); }
+  .baris b { text-align: right; font-weight: 500; }
+  .feed { list-style: none; margin: 0; padding: 0; }
+  .feed li { display: grid; grid-template-columns: 8px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 8px 0; border-top: 1px solid var(--soft); font-size: 14px; }
+  .feed li:first-child { border-top: 0; }
+  .feed li.baru { animation: muncul .5s var(--ease); }
+
+  .cek { display: flex; gap: 8px; }
+  .cek input { flex: 1; min-width: 0; min-height: 40px; padding: 8px 12px; font: 14px var(--mono); letter-spacing: .04em; color: var(--ink);
+               background: var(--rail); border: 1px solid var(--line); border-radius: 10px; transition: border-color .15s var(--ease); }
+  .cek input:focus { border-color: var(--p1); }
+  .cek input::placeholder { color: var(--muted); letter-spacing: 0; }
+  button.biasa { min-height: 40px; padding: 0 16px; border: 1px solid var(--soft); border-radius: 10px; background: var(--raised);
+                 color: var(--ink); font: inherit; font-weight: 500; cursor: pointer; transition: background-color .15s var(--ease); }
+  button.biasa:hover { background: var(--hover); }
   button.utama { background: var(--accent); border-color: transparent; color: var(--on-accent); }
   button.utama:hover { background: var(--accent-hover); }
-  button:focus-visible, input:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(224,163,170,.4); }
-  input[type=text] { min-height: 40px; padding: 8px 12px; font: 15px var(--mono); border: 1px solid var(--line);
-                     border-radius: 10px; background: var(--rail); color: var(--ink); width: min(260px, 100%); }
-  #hasil-bukti { margin-left: 8px; color: var(--ink-2); }
-  #rantai { font-family: var(--mono); font-size: 13px; overflow-wrap: anywhere; margin: 0; }
+  .langkah { list-style: none; margin: 16px 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+  .langkah li { font-size: 12px; color: var(--muted); text-align: center; }
+  .langkah li::before { content: ""; display: block; height: 4px; border-radius: 2px; background: var(--raised); margin-bottom: 6px; transition: background-color .3s var(--ease); }
+  .langkah li.ok { color: var(--ink-2); } .langkah li.ok::before { background: var(--ok); }
+  .langkah li.tunggu::before { background: var(--gold); }
+  .hasil-cek { display: flex; align-items: center; gap: 8px; min-height: 24px; margin-top: 12px; color: var(--ink-2); font-size: 14px; }
+  .titik { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); flex: none; }
+  .titik.ok { background: var(--ok); } .titik.tunggu { background: var(--gold); } .titik.buruk { background: var(--danger); }
+
+  .pita { display: grid; }
+  .blok { position: relative; display: block; width: 100%; text-align: left; padding: 10px 12px; border-radius: 10px; background: var(--rail);
+          border: 1px solid var(--soft); color: var(--ink); font: inherit; cursor: pointer; transition: border-color .15s var(--ease), background-color .15s var(--ease); }
+  .blok:hover { border-color: var(--line); background: #171A20; }
+  .blok + .blok { margin-top: 12px; }
+  .blok + .blok::before { content: ""; position: absolute; left: 20px; top: -13px; width: 1px; height: 12px; background: var(--line); }
+  .blok .atas { display: flex; justify-content: space-between; font-size: 13px; }
+  .blok .rinci { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--soft); font-size: 12px; color: var(--ink-2); }
+  .blok.baru { animation: muncul .5s var(--ease); border-color: rgba(196,168,106,.45); }
+  .blok.rusak { border-color: rgba(224,134,141,.5); }
+  .blok.rusak .atas span:first-child { color: var(--danger); }
+  #rantai { margin-top: 16px; font-size: 12px; overflow-wrap: anywhere; }
   .rantai-baik { color: var(--ok); } .rantai-buruk { color: var(--danger); }
-  @media (max-width: 600px) { .kotak { grid-template-columns: 1fr; } main { padding: 24px 16px 48px; } }
+
+  .integritas div { display: flex; align-items: center; gap: 10px; padding: 8px 0; }
+  .integritas b { margin-left: auto; font-weight: 500; font-variant-numeric: tabular-nums; }
+  .integritas .buruk b { color: var(--danger); }
+  .kosong { color: var(--muted); font-size: 14px; }
+
+  dialog { width: min(420px, calc(100vw - 32px)); padding: 0; border: 1px solid var(--line); border-radius: 16px; background: var(--card); color: var(--ink); }
+  dialog::backdrop { background: rgba(8,10,13,.7); }
+  dialog .isi { padding: 24px; } dialog .kaki { display: flex; justify-content: flex-end; gap: 12px; padding: 16px 24px; border-top: 1px solid var(--soft); }
+  .toast { position: fixed; left: 50%; bottom: 24px; z-index: 10; transform: translate(-50%, 12px); padding: 10px 16px; border-radius: 10px;
+           background: var(--raised); border: 1px solid var(--line); font-size: 14px; opacity: 0; pointer-events: none; transition: opacity .2s var(--ease), transform .2s var(--ease); }
+  .toast.tampil { opacity: 1; transform: translate(-50%, 0); }
+
+  @media (max-width: 1000px) { main { grid-template-columns: minmax(0, 1fr); padding: 24px 16px; } header { padding: 12px 16px; } .geser { margin-left: 0; width: 100%; justify-content: space-between; } }
+  @media (max-width: 560px) { .total { grid-template-columns: minmax(0, 1fr); gap: 16px; } .angka-besar { font-size: 48px; } .sisi b { font-size: 32px; } .baris { grid-template-columns: minmax(0, 1fr) 48px; } .baris .garis { display: none; } .feed li { grid-template-columns: 8px minmax(0, 1fr); } .feed li > :last-child { grid-column: 2; } }
+  @media (prefers-reduced-motion: reduce) { *, *::before { animation-duration: 0s !important; transition-duration: 0s !important; } }
 </style>
 </head>
 <body>
+<header>
+  <div class="merek"><img src="/logo-untad.png" alt="" width="34" height="35"><div><b>Pusat rekap</b><small>Pemira Presma UNTAD · Laptop B</small></div></div>
+  <span class="status" id="tag-status">Pemungutan: <span id="status">-</span></span>
+  <div class="geser">
+    <span class="muted small num" id="waktu"></span>
+    <div class="saklar" role="group" aria-label="Pemungutan suara">
+      <button type="button" data-nilai="buka" aria-pressed="false" onclick="ubah('buka')">Buka</button>
+      <button type="button" data-nilai="tutup" aria-pressed="false" onclick="mintaTutup()">Tutup</button>
+    </div>
+  </div>
+</header>
+
 <main>
-  <h1>Papan Hasil</h1>
-  <p class="redup">Pusat rekap (cloud-api di Laptop B). Diperbarui setiap 2 detik.</p>
-  <div class="card baris-atas">
-    <span class="tag" id="tag-status">Pemungutan: <span id="status">-</span></span>
-    <span style="flex:1"></span>
-    <button class="utama" onclick="ubah('buka')">Buka</button>
-    <button onclick="ubah('tutup')">Tutup</button>
+  <div class="kolom">
+    <section class="kartu" id="k-total" aria-labelledby="judul-total">
+      <div class="total">
+        <div>
+          <h2 id="judul-total" class="soft" style="font-weight:400;margin-bottom:12px">Total suara masuk</h2>
+          <p><span class="angka-besar" id="total">0</span><span class="naik-baru num" id="naik"></span></p>
+        </div>
+        <div class="laju">
+          <p class="soft small">Laju suara</p>
+          <p><b id="laju">0</b> <span class="soft small">suara/menit</span></p>
+          <div class="spark" id="spark" role="img" aria-label="Suara masuk per 10 detik, 5 menit terakhir"></div>
+        </div>
+      </div>
+      <div class="partisipasi">
+        <div class="judul" style="margin:0"><p class="soft" id="catatan">Belum ada suara.</p><span class="num soft" id="persen-ikut"></span></div>
+        <div class="meter" aria-hidden="true"><i id="meter" style="transform:scaleX(0)"></i></div>
+      </div>
+    </section>
+
+    <section class="kartu" id="k-paslon" aria-labelledby="judul-paslon">
+      <div class="judul"><h2 id="judul-paslon">Per paslon</h2><span class="muted small">Pilihan tetap rahasia di bilik, hanya jumlahnya yang tampil</span></div>
+      <div id="kandidat"><p class="kosong">Belum ada suara.</p></div>
+    </section>
+
+    <section class="kartu" id="k-tps" aria-labelledby="judul-tps">
+      <div class="judul"><h2 id="judul-tps">Per TPS</h2><span class="muted small">Suara diterima dari tiap TPS</span></div>
+      <div id="tps"><p class="kosong">Belum ada suara.</p></div>
+    </section>
+
+    <section class="kartu" id="k-feed" aria-labelledby="judul-feed">
+      <div class="judul"><h2 id="judul-feed">Kiriman terbaru</h2><span class="muted small">Tanpa isi pilihan</span></div>
+      <ul class="feed" id="feed"><li class="kosong" style="display:block">Belum ada kiriman</li></ul>
+    </section>
   </div>
-  <div class="kotak">
-    <div><b id="total">0</b>total suara</div>
-    <div id="kotak-kiriman"><b id="kiriman">0</b>kiriman ganda</div>
-    <div id="kotak-pemilih"><b id="pemilih">0</b>pemilih ganda</div>
-  </div>
-  <p id="catatan"></p>
-  <section class="card"><h2>Per paslon</h2><div id="kandidat"></div></section>
-  <section class="card"><h2>Per TPS</h2><div id="tps"></div></section>
-  <section class="card"><h2>Cek bukti suara</h2>
-    <p style="margin:0"><input type="text" id="kode-bukti" placeholder="16 karakter kode bukti" aria-label="Kode bukti">
-       <button onclick="cekBukti()">Cek</button><span id="hasil-bukti" aria-live="polite"></span></p></section>
-  <section class="card"><h2>Rantai block</h2><p id="rantai">-</p></section>
+
+  <aside class="kolom" aria-label="Pemeriksaan">
+    <section class="kartu" id="k-cek" aria-labelledby="judul-cek">
+      <div class="judul" style="margin-bottom:4px"><h2 id="judul-cek">Cek bukti suara</h2><kbd title="Tekan / untuk mengetik kode">/</kbd></div>
+      <p class="muted" style="font-size:13px;margin-bottom:16px">Masukkan kode bukti dari bilik untuk memastikan suaramu sampai di pusat rekap</p>
+      <form class="cek" onsubmit="cekBukti(); return false">
+        <input type="text" id="kode-bukti" placeholder="16 karakter kode bukti" aria-label="Kode bukti" autocomplete="off" spellcheck="false" maxlength="24">
+        <button class="biasa" type="submit">Cek</button>
+      </form>
+      <ol class="langkah" id="langkah" hidden><li>Diterima pusat</li><li>Ditambang</li><li>Tercatat</li></ol>
+      <p class="hasil-cek" aria-live="polite"><span class="titik" id="titik-bukti" hidden></span><span id="hasil-bukti"></span></p>
+    </section>
+
+    <section class="kartu" id="k-rantai" aria-labelledby="judul-rantai">
+      <div class="judul"><h2 id="judul-rantai">Rantai block</h2><span class="muted small" id="difficulty"></span></div>
+      <div class="pita" id="pita"></div>
+      <p id="rantai" class="mono">-</p>
+    </section>
+
+    <section class="kartu" id="k-integritas" aria-labelledby="judul-integritas">
+      <h2 id="judul-integritas" style="margin-bottom:8px">Integritas data</h2>
+      <div class="integritas">
+        <div id="kotak-kiriman"><span class="titik ok"></span><span class="soft">kiriman ganda</span><b id="kiriman">0</b></div>
+        <div id="kotak-pemilih"><span class="titik ok"></span><span class="soft">pemilih ganda</span><b id="pemilih">0</b></div>
+      </div>
+    </section>
+  </aside>
 </main>
+
+<dialog id="dlg-tutup" aria-labelledby="dlg-judul">
+  <div class="isi"><h2 id="dlg-judul" style="font-size:18px;margin-bottom:8px">Tutup pemungutan?</h2>
+    <p class="soft">Semua TPS berhenti menerima suara baru begitu pengumuman sampai. Suara yang masih antre di TPS tetap disetor ke pusat rekap</p></div>
+  <div class="kaki"><button class="biasa" type="button" id="batal-tutup">Batal</button><button class="biasa utama" type="button" id="ya-tutup">Tutup pemungutan</button></div>
+</dialog>
+<div class="toast" id="toast" role="status"></div>
+
 <script>
+const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
-function batang(nama, n, maks) {
-  return '<div class="baris"><span>' + esc(nama) + '</span><div class="jalur"><div class="batang" style="width:' +
-         Math.round(100 * n / Math.max(maks, 1)) + '%"></div></div><b>' + n + '</b></div>';
+const fmt = (n) => Number(n || 0).toLocaleString('id-ID');
+const persen = (a, b) => (b ? Math.round((100 * a) / b) : 0);
+const powHtml = (h) => { const m = /^0+/.exec(h || ''); return m ? `<span class="pow">${m[0]}</span>${esc(h.slice(m[0].length))}` : esc(h); };
+const tenang = matchMedia('(prefers-reduced-motion: reduce)').matches;
+let totalLama = null, blokLama = new Set(), feedLama = new Set(), blokTerbuka = null;
+
+function toast(teks) {
+  const t = $('toast'); t.textContent = teks; t.classList.add('tampil');
+  clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('tampil'), 2400);
 }
+
+// angka bergerak halus ke nilai baru, supaya perubahan terlihat
+function gulir(el, ke) {
+  const dari = Number(el.dataset.v || 0);
+  el.dataset.v = ke;
+  if (tenang || dari === ke) { el.textContent = fmt(ke); return; }
+  const mulai = performance.now(), lama = 500;
+  const langkah = (t) => {
+    const p = Math.min(1, (t - mulai) / lama), e = 1 - Math.pow(1 - p, 3);
+    el.textContent = fmt(Math.round(dari + (ke - dari) * e));
+    if (p < 1) requestAnimationFrame(langkah);
+  };
+  requestAnimationFrame(langkah);
+}
+
+// laju: selisih total tiap pembaruan dikumpulkan per 10 detik, 30 kotak = 5 menit terakhir
+const ember = Array(30).fill(0);
+let emberAwal = Math.floor(Date.now() / 10000);
+function catatLaju(tambah) {
+  const sekarang = Math.floor(Date.now() / 10000);
+  while (emberAwal < sekarang) { ember.shift(); ember.push(0); emberAwal++; }
+  ember[ember.length - 1] += tambah;
+  const maks = Math.max(1, ...ember);
+  $('spark').innerHTML = ember.map((n) => `<i style="height:${Math.round((48 * n) / maks)}px" title="${n} suara"></i>`).join('');
+  $('laju').textContent = fmt(ember.slice(-6).reduce((a, b) => a + b, 0));
+}
+
+function adu(entri) {
+  const total = entri.reduce((a, [, n]) => a + n, 0);
+  if (entri.length !== 2) {
+    return `<div class="lain">${entri.map(([k, n]) => `<div class="baris"><span>Paslon ${esc(k)}</span><span class="garis"><i style="width:${persen(n, total)}%"></i></span><b class="num">${fmt(n)}</b></div>`).join('')}</div>`;
+  }
+  const [[k1, n1], [k2, n2]] = entri;
+  return `<div class="adu-angka">
+      <div class="sisi"><b style="color:var(--p1)">${fmt(n1)}</b><span>Paslon ${esc(k1)} · ${persen(n1, total)}%</span></div>
+      <div class="sisi kanan"><b style="color:var(--p2)">${fmt(n2)}</b><span>Paslon ${esc(k2)} · ${persen(n2, total)}%</span></div>
+    </div>
+    <div class="adu-batang" role="img" aria-label="Paslon ${esc(k1)} ${n1} suara, Paslon ${esc(k2)} ${n2} suara">
+      <i style="flex-grow:${n1 || 0.0001};background:var(--p1)" title="Paslon ${esc(k1)}: ${fmt(n1)} suara (${persen(n1, total)}%)"></i>
+      <i style="flex-grow:${n2 || 0.0001};background:var(--p2)" title="Paslon ${esc(k2)}: ${fmt(n2)} suara (${persen(n2, total)}%)"></i>
+    </div>
+    <div class="adu-tengah"><span class="muted small">Garis tengah = 50%</span><span class="muted small">${n1 === n2 ? 'Imbang' : `Selisih ${fmt(Math.abs(n1 - n2))} suara`}</span></div>`;
+}
+
+function berapaLalu(waktu) {
+  const detik = waktu > 1e12 ? waktu / 1000 : waktu;  // TPS mencatat waktu dalam milidetik
+  const s = Math.max(0, Math.round(Date.now() / 1000 - detik));
+  return s < 60 ? `${s} detik lalu` : `${Math.floor(s / 60)} menit lalu`;
+}
+
 async function muat() {
   const r = await (await fetch('/rekap')).json();
-  document.getElementById('status').textContent = r.pemungutan;
-  document.getElementById('tag-status').className = 'tag ' + (r.pemungutan === 'buka' ? 'buka' : r.pemungutan === 'tutup' ? 'tutup' : '');
-  document.getElementById('total').textContent = r.total_suara;
-  document.getElementById('kiriman').textContent = r.kiriman_ganda;
-  document.getElementById('pemilih').textContent = r.pemilih_ganda;
-  document.getElementById('catatan').textContent = r.catatan || '';
-  document.getElementById('kotak-kiriman').className = r.kiriman_ganda ? 'buruk' : '';
-  document.getElementById('kotak-pemilih').className = r.pemilih_ganda ? 'buruk' : '';
-  const k = Object.entries(r.per_kandidat), t = Object.entries(r.per_tps);
-  const maks = Math.max(1, ...k.map(x => x[1]));
-  document.getElementById('kandidat').innerHTML =
-    k.map(x => batang('Paslon ' + x[0], x[1], maks)).join('') || '<p class="redup">Belum ada suara.</p>';
-  document.getElementById('tps').innerHTML =
-    t.map(x => batang(x[0], x[1], r.total_suara)).join('') || '<p class="redup">Belum ada suara.</p>';
+  $('status').textContent = r.pemungutan;
+  $('tag-status').className = 'status ' + (r.pemungutan === 'buka' ? 'buka' : r.pemungutan === 'tutup' ? 'tutup' : '');
+  document.querySelectorAll('.saklar button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.nilai === r.pemungutan)));
+  gulir($('total'), r.total_suara);
+  if (totalLama !== null && r.total_suara > totalLama) {
+    $('naik').textContent = `+${r.total_suara - totalLama}`;
+    $('naik').classList.add('tampil');
+    clearTimeout($('naik')._h); $('naik')._h = setTimeout(() => $('naik').classList.remove('tampil'), 1600);
+  }
+  catatLaju(totalLama === null ? 0 : Math.max(0, r.total_suara - totalLama));
+  totalLama = r.total_suara;
+  $('catatan').textContent = r.catatan || 'Belum ada suara.';
+  const ikut = r.terdaftar ? Math.min(1, r.total_suara / r.terdaftar) : 0;
+  $('persen-ikut').textContent = r.terdaftar ? `${(ikut * 100).toFixed(1)}%` : '';
+  $('meter').style.transform = `scaleX(${ikut})`;
+  $('kiriman').textContent = r.kiriman_ganda;
+  $('pemilih').textContent = r.pemilih_ganda;
+  for (const [id, n] of [['kotak-kiriman', r.kiriman_ganda], ['kotak-pemilih', r.pemilih_ganda]]) {
+    $(id).className = n ? 'buruk' : '';
+    $(id).querySelector('.titik').className = 'titik ' + (n ? 'buruk' : 'ok');
+  }
+  const k = Object.entries(r.per_kandidat).sort((a, b) => a[0] - b[0]);
+  $('kandidat').innerHTML = k.length ? adu(k) : '<p class="kosong">Belum ada suara.</p>';
+  const t = Object.entries(r.per_tps).sort((a, b) => b[1] - a[1]);
+  $('tps').innerHTML = t.map(([nama, n]) => `<div class="baris"><span class="mono">${esc(nama)}</span><span class="garis"><i style="width:${persen(n, r.total_suara)}%"></i></span><b class="num">${fmt(n)}</b></div>`).join('')
+    || '<p class="kosong">Belum ada suara.</p>';
+  $('waktu').textContent = 'Diperbarui ' + new Date().toLocaleTimeString('id-ID');
 }
+
+async function muatFeed() {
+  // hanya TPS, nomor urut, waktu, dan block: pilihan pemilih tidak ditampilkan
+  const daftar = await (await fetch('/suara?terakhir=6')).json();
+  if (!daftar.length) return;
+  $('feed').innerHTML = daftar.map((s) => {
+    const baru = feedLama.size && !feedLama.has(s.request_id);
+    return `<li class="${baru ? 'baru' : ''}"><span class="titik ${s.block != null ? 'ok' : 'tunggu'}"></span>
+      <span><span class="mono">${esc(s.tps_id)}</span> <span class="muted">· seq ${s.seq}</span></span>
+      <span class="muted small num">${s.block != null ? `block #${s.block}` : 'menunggu ditambang'} · ${berapaLalu(s.waktu)}</span></li>`;
+  }).join('');
+  feedLama = new Set(daftar.map((s) => s.request_id));
+}
+
 async function muatRantai() {
-  const r = await (await fetch('/rantai')).json();
+  const r = await (await fetch('/rantai?terakhir=5')).json();
   const v = await (await fetch('/rantai/validasi')).json();
-  const el = document.getElementById('rantai');
-  el.className = v.valid ? 'rantai-baik' : 'rantai-buruk';
+  $('difficulty').textContent = `difficulty ${r.difficulty}`;
+  $('pita').innerHTML = (r.block || []).slice().reverse().map((b) => {
+    const rusak = !v.valid && b.index >= v.index_rusak, baru = blokLama.size && !blokLama.has(b.index);
+    const buka = blokTerbuka === b.index;
+    return `<button type="button" class="blok ${rusak ? 'rusak' : ''} ${baru ? 'baru' : ''}" data-index="${b.index}" aria-expanded="${buka}">
+      <div class="atas"><span>Block #${b.index}</span><span class="muted num">${b.jumlah_suara} suara</span></div>
+      <div class="mono soft">${b.index ? powHtml(b.hash) : esc(b.hash)}…</div>
+      ${buka ? `<div class="rinci">${b.waktu ? 'Ditambang ' + new Date(b.waktu * 1000).toLocaleTimeString('id-ID') : 'Genesis'} · ${rusak ? 'hash tidak cocok dengan isi' : 'hash cocok dengan isi'}</div>` : ''}</button>`;
+  }).join('');
+  blokLama = new Set((r.block || []).map((b) => b.index));
+  const el = $('rantai');
+  el.className = 'mono ' + (v.valid ? 'rantai-baik' : 'rantai-buruk');
   el.textContent = r.panjang + ' block | ' + r.pool + ' suara menunggu ditambang | hash terakhir ' +
     r.terakhir + ' | ' + (v.valid ? 'rantai VALID' :
     'rantai TIDAK VALID, block pertama rusak: ' + v.index_rusak + ' (' + v.alasan + ')');
 }
+$('pita').addEventListener('click', (e) => {
+  const b = e.target.closest('.blok'); if (!b) return;
+  const i = Number(b.dataset.index);
+  blokTerbuka = blokTerbuka === i ? null : i;
+  muatRantai();
+});
+
 async function cekBukti() {
-  const kode = document.getElementById('kode-bukti').value.trim();
-  const r = await (await fetch('/bukti/' + encodeURIComponent(kode || '-'))).json();
-  document.getElementById('hasil-bukti').textContent = r.status;
+  const kode = $('kode-bukti').value.replace(/[\s-]+/g, '').toLowerCase();
+  if (!kode) { $('kode-bukti').focus(); return; }
+  const r = await (await fetch('/bukti/' + encodeURIComponent(kode))).json();
+  $('hasil-bukti').textContent = r.status;
+  const tahap = r.status.startsWith('tercatat') ? 3 : r.status.startsWith('diterima') ? 1 : 0;
+  const titik = $('titik-bukti');
+  titik.hidden = false;
+  titik.className = 'titik ' + (tahap === 3 ? 'ok' : tahap ? 'tunggu' : 'buruk');
+  $('langkah').hidden = false;
+  [...$('langkah').children].forEach((li, i) => { li.className = i < tahap ? 'ok' : i === tahap && tahap ? 'tunggu' : ''; });
 }
+
 async function ubah(nilai) {
-  await fetch('/pemungutan/' + nilai, {method: 'POST'});
+  await fetch('/pemungutan/' + nilai, { method: 'POST' });
+  toast(nilai === 'buka' ? 'Pemungutan dibuka, diumumkan ke semua TPS' : 'Pemungutan ditutup, diumumkan ke semua TPS');
   muat();
 }
-muat();
-muatRantai();
-setInterval(() => { muat(); muatRantai(); }, 2000);
+function mintaTutup() { $('dlg-tutup').showModal(); $('batal-tutup').focus(); }
+$('batal-tutup').onclick = () => $('dlg-tutup').close();
+$('ya-tutup').onclick = () => { $('dlg-tutup').close(); ubah('tutup'); };
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === '/' && document.activeElement.tagName !== 'INPUT') { e.preventDefault(); $('kode-bukti').focus(); }
+});
+
+const segarkan = () => Promise.all([muat(), muatRantai(), muatFeed()])
+  .catch(() => { $('waktu').textContent = 'Pusat rekap tidak terjangkau, mencoba lagi'; });
+segarkan();
+setInterval(segarkan, 2000);
 </script>
 </body>
 </html>
