@@ -274,6 +274,8 @@ Click **Buka** again after the closed-voting check. Accepted votes wait at the s
 
 **B:** the board shows the total, votes per candidate, per station, the chain, and participation as `Partisipasi: X dari Y pemilih terdaftar`. `Y` is the number of active accounts each station reported with its last delivery (150 simulated accounts plus the ones you registered). The raw tally is at `http://localhost:9090/rekap`.
 
+The board is split in two columns. The left column shows the running total with the vote rate per minute over the last five minutes, both Paslon side by side on one bar, the count per station, and the latest deliveries (station, sequence number, block, time; never the choice). The right column holds the receipt check with its three stages, the last five blocks of the chain (click a block for its mining time and hash check), and the duplicate counters. **Tutup** asks for confirmation first, and pressing `/` jumps to the receipt field.
+
 ### Ability 6: only deliveries with the right token are accepted
 
 **A:**
